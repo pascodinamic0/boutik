@@ -184,6 +184,8 @@ export const ln: Dict = {
   'rcpt.remaining': 'Etikali kofuta',
   'rcpt.notFound': 'Resi emonani te.',
   'rcpt.equiv': 'Ekokani na',
+  'rcpt.pending': 'Ebombami na telefone · ezali kozela kotindama',
+  'rcpt.synced': 'Etindami na serveur',
 
   'sales.title': 'Lisolo ya biteki',
   'sales.empty': 'Eteki moko te na ntango oyo.',

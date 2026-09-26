@@ -149,21 +149,28 @@ test.describe('Boutik', () => {
     await expect(page.locator('[data-testid="sync-pill"]:visible').first()).toHaveAttribute('data-state', 'offline');
 
     await addToCart(page, 'Coca-Cola 33 cl', 2);
+    await addToCart(page, 'Biscuits (paquet)', 1);
+    await page.waitForTimeout(800);
+    await page.screenshot({ path: `/workspace/boutik/qa/offline-pos-${info.project.name}.png` });
     await openCheckout(page);
     await page.getByTestId('method-orange').click();
     await page.getByTestId('confirm-sale').click();
     await expect(page.getByTestId('sale-success')).toBeVisible();
     const saleId = await page.getByTestId('receipt').getAttribute('data-sale-id');
     await expect(page.locator('[data-testid="sync-pill"]:visible').first()).toHaveAttribute('data-pending', /[1-9]/);
+    await expect(page.getByTestId('receipt-sync')).toHaveAttribute('data-pending', '1');
+    await page.waitForTimeout(1500); // let the receipt animation settle
     await page.screenshot({ path: `/workspace/boutik/qa/offline-sale-${info.project.name}.png` });
     expect(sql(`select 1 from sales where id='${saleId}'`)).toHaveLength(0);
 
     await context.setOffline(false);
     await waitSynced(page, 60_000);
+    await expect(page.getByTestId('receipt-sync')).toHaveAttribute('data-pending', '0');
     const rows = sql<{ method: string; n: number }>(
       `select s.method, (select count(*) from sale_items i where i.sale_id=s.id)::int as n from sales s where s.id='${saleId}'`,
     );
-    expect(rows).toEqual([{ method: 'orange', n: 1 }]);
+    expect(rows).toEqual([{ method: 'orange', n: 2 }]);
+    await page.waitForTimeout(500);
     await page.screenshot({ path: `/workspace/boutik/qa/offline-sale-synced-${info.project.name}.png` });
   });
 });

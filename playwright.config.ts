@@ -19,6 +19,10 @@ export default defineConfig({
     timezoneId: 'Africa/Kinshasa',
     serviceWorkers: 'allow',
   },
+  // Local runs start the production build themselves (npm run build first).
+  webServer: process.env.BASE_URL
+    ? undefined
+    : { command: 'npx next start -p 3100', url: 'http://localhost:3100', reuseExistingServer: true, timeout: 60_000 },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'], ...chrome, viewport: { width: 1440, height: 900 } } },
     { name: 'mobile', use: { ...devices['Pixel 7'], ...chrome } },

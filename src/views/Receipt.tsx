@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'motion/react';
-import { Check, MessageCircle, Printer, ShoppingBag } from 'lucide-react';
+import { Check, CloudUpload, CloudCheck, MessageCircle, Printer, ShoppingBag } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '@/app-shell/AppContext';
 import { AppLink, useRouter } from '@/app-shell/router';
@@ -26,14 +26,15 @@ export function ReceiptView({ id }: { id: string }) {
     if (!sale) return null;
     const items = await db.sale_items.where('sale_id').equals(id).toArray();
     const customer = sale.customer_id ? await db.customers.get(sale.customer_id) : null;
-    return { sale, items, customer };
+    const pending = (await db.outbox.toArray()).some((o) => o.ops.some((op) => op.table === 'sales' && op.rows.some((r) => r.id === id)));
+    return { sale, items, customer, pending };
   }, [id]);
 
   if (data === undefined) return <div className="skeleton mx-auto h-[520px] max-w-md rounded-3xl" />;
   if (!data || !shop)
     return <EmptyState image="/img/kiosque.webp" title={t('rcpt.notFound')} action={<AppLink href="/app/ventes" className="font-semibold text-brand">{t('nav.sales')} →</AppLink>} />;
 
-  const { sale, items, customer } = data;
+  const { sale, items, customer, pending } = data;
   const f = (v: number) => formatMoney(v, sale.currency);
   const alt = otherCurrency(sale.currency);
   const text = receiptText(shop, sale, items, customer);
@@ -51,6 +52,17 @@ export function ReceiptView({ id }: { id: string }) {
             <Check size={34} strokeWidth={3} />
           </motion.span>
           <h1 className="mt-3 text-2xl font-extrabold tracking-tight" data-testid="sale-success">{t('rcpt.success')}</h1>
+          <span
+            data-testid="receipt-sync"
+            data-pending={pending ? '1' : '0'}
+            className={
+              'mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12.5px] font-semibold ' +
+              (pending ? 'bg-gold-soft text-gold' : 'bg-ok-soft text-ok')
+            }
+          >
+            {pending ? <CloudUpload size={14} /> : <CloudCheck size={14} />}
+            {pending ? t('rcpt.pending') : t('rcpt.synced')}
+          </span>
         </motion.div>
       ) : (
         <div className="no-print">

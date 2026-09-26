@@ -192,6 +192,8 @@ export const fr = {
   'rcpt.remaining': 'Reste à payer',
   'rcpt.notFound': 'Reçu introuvable.',
   'rcpt.equiv': 'Équivalent',
+  'rcpt.pending': 'Sur le téléphone · envoi en attente',
+  'rcpt.synced': 'Envoyée au serveur',
 
   // Historique des ventes
   'sales.title': 'Historique des ventes',
