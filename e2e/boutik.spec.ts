@@ -112,12 +112,12 @@ test.describe('Boutik', () => {
     await page.locator('[data-testid="lang-switcher"]:visible').first().click();
     await page.getByTestId('lang-ln').click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'ln');
-    await expect(page.getByText('Koteka').first()).toBeVisible();
+    await expect(page.getByText('Koteka', { exact: true }).locator('visible=true').first()).toBeVisible();
     await page.locator('[data-testid="theme-toggle"]:visible').first().click();
     await expect(page.locator('html')).toHaveClass(/dark/);
     await page.reload();
     await expect(page.locator('html')).toHaveClass(/dark/);
-    await expect(page.getByText('Koteka').first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText('Koteka', { exact: true }).locator('visible=true').first()).toBeVisible({ timeout: 30_000 });
   });
 
   test('seller role cannot see owner pages', async ({ page }) => {

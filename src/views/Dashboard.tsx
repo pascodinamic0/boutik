@@ -99,7 +99,7 @@ export function Dashboard() {
         <StatCard label={t('dash.lowStock')} value={low.length} sub={t('stock.products', { n: products?.length ?? 0 })} icon={<Package size={17} />} tone={low.length ? 'danger' : 'ok'} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <Card className="p-5">
           <SectionTitle action={isOwner ? <AppLink href="/app/rapports" className="text-sm font-semibold text-brand">{t('nav.reports')}</AppLink> : undefined}>
             {t('dash.last7')}
@@ -140,7 +140,7 @@ export function Dashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <Card className="p-5">
           <SectionTitle action={<AppLink href="/app/ventes" className="text-sm font-semibold text-brand">{t('common.seeAll')}</AppLink>}>{t('dash.recent')}</SectionTitle>
           {data && data.recent.length === 0 ? (

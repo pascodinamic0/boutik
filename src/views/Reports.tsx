@@ -61,7 +61,7 @@ export function Reports() {
         {chartSeries.length ? <BarChart series={chartSeries} currency={m.cur} height={220} labels={{ revenue: t('rep.revenue'), profit: t('rep.profit') }} /> : <div className="skeleton h-[240px] rounded-2xl" />}
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="p-5">
           <SectionTitle>{t('rep.byMethod')}</SectionTitle>
           {s && s.byMethod.length ? (

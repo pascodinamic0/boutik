@@ -38,7 +38,7 @@ export function LegalPage({ fr, ln }: { fr: LegalDoc; ln: LegalDoc }) {
             <section key={s.h}>
               <h2 className="text-xl font-bold">{s.h}</h2>
               {s.p.map((p, i) => (
-                <p key={i} className="mt-3 leading-relaxed text-muted">
+                <p key={i} className="mt-3 break-words leading-relaxed text-muted [overflow-wrap:anywhere]">
                   {p}
                 </p>
               ))}

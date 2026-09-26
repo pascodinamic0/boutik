@@ -6,6 +6,7 @@ import { useI18n } from '@/i18n';
 export function NotFoundView() {
   const { t } = useI18n();
   return (
+    <div data-testid="not-found">
     <EmptyState
       image="/img/marche.webp"
       title={t('err.notFound')}
@@ -16,5 +17,6 @@ export function NotFoundView() {
         </AppLink>
       }
     />
+    </div>
   );
 }

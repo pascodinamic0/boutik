@@ -55,14 +55,16 @@ export function setDb(db: BoutikDB | null) {
   _db = db;
 }
 
+// Pull order matters for the first sync: items before their sales (so totals and
+// profit are right as soon as a sale appears), stock history last.
 export const DATA_TABLES = [
   'products',
-  'stock_movements',
   'customers',
-  'sales',
   'sale_items',
+  'sales',
   'credit_payments',
   'expenses',
+  'stock_movements',
 ] as const;
 export type DataTable = (typeof DATA_TABLES)[number];
 

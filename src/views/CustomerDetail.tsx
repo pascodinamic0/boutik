@@ -46,7 +46,7 @@ export function CustomerDetail({ id }: { id: string }) {
   return (
     <div>
       <PageHeader title={c.name} back="/app/credit" actions={<Button variant="secondary" size="sm" onClick={() => setEdit(true)} aria-label={t('common.edit')}><Pencil size={15} /></Button>} />
-      <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
         <div className="space-y-4">
           <Card className="overflow-hidden">
             <div className="flex items-center gap-4 p-5">

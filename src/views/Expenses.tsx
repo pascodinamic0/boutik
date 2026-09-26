@@ -74,7 +74,7 @@ export function Expenses() {
       {expenses && list.length === 0 ? (
         <EmptyState image="/img/marche2.webp" title={t('exp.empty')} action={<Button onClick={() => setOpen(true)}>{t('exp.add')}</Button>} />
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
           <Card className="divide-y divide-line overflow-hidden lg:order-1">
             {list.map((e) => {
               const c = catOf(e.category);

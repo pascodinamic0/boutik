@@ -79,11 +79,11 @@ export function SettingsView() {
   return (
     <div>
       <PageHeader title={t('set.title')} />
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <div className="space-y-5">
           <Section title={t('set.shop')} icon={<Store size={18} className="text-brand" />}>
             {!isOwner && <p className="mb-4 rounded-2xl bg-info-soft px-4 py-2.5 text-sm text-info">{t('set.ownerOnly')}</p>}
-            <fieldset disabled={!isOwner} className="grid gap-4 sm:grid-cols-2">
+            <fieldset disabled={!isOwner} className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label={t('onb.shopName')} className="sm:col-span-2">
                 <Input value={name} onChange={(e) => setName(e.target.value)} />
               </Field>

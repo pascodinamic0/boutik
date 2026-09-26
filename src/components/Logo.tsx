@@ -1,22 +1,27 @@
 import clsx from 'clsx';
+import { useId } from 'react';
 
 /** Boutik app mark: storefront with a striped awning, on a terracotta tile. */
 export function LogoMark({ size = 40, className, flat = false }: { size?: number; className?: string; flat?: boolean }) {
+  // Unique gradient ids: several marks can be on the page (some inside display:none containers).
+  const uid = useId().replace(/:/g, '');
+  const bg = `bk-bg-${uid}`;
+  const shine = `bk-shine-${uid}`;
   return (
-    <svg width={size} height={size} viewBox="0 0 512 512" className={className} aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 512 512" className={clsx('shrink-0', className)} aria-hidden="true">
       <defs>
-        <linearGradient id="bk-bg" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id={bg} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#E0713A" />
           <stop offset="0.55" stopColor="#C2531F" />
           <stop offset="1" stopColor="#8E3413" />
         </linearGradient>
-        <linearGradient id="bk-shine" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={shine} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#fff" stopOpacity=".18" />
           <stop offset=".55" stopColor="#fff" stopOpacity="0" />
         </linearGradient>
       </defs>
-      <rect width="512" height="512" rx="116" fill={flat ? '#C2531F' : 'url(#bk-bg)'} />
-      {!flat && <rect width="512" height="512" rx="116" fill="url(#bk-shine)" />}
+      <rect width="512" height="512" rx="116" fill={flat ? '#C2531F' : `url(#${bg})`} />
+      {!flat && <rect width="512" height="512" rx="116" fill={`url(#${shine})`} />}
       <path d="M146 236 H366 V372 a20 20 0 0 1 -20 20 H166 a20 20 0 0 1 -20 -20 Z" fill="#FFF6EA" />
       <path d="M226 392 V318 a30 30 0 0 1 60 0 V392 Z" fill="#9A3A12" />
       <circle cx="275" cy="356" r="5" fill="#F2B441" />

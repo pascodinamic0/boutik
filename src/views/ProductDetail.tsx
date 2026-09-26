@@ -41,7 +41,7 @@ export function ProductDetail({ id }: { id: string }) {
   return (
     <div>
       <PageHeader title={p.name} back="/app/stock" />
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
         <div className="space-y-4">
           <Card className="overflow-hidden">
             <div className="relative aspect-[4/3] bg-surface-2">
