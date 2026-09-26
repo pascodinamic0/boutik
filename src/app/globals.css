@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #faf6f0;
+  --surface: #ffffff;
+  --surface-2: #f5eee5;
+  --line: #ebe1d4;
+  --text: #24170f;
+  --muted: #7b6a5c;
+  --brand: #c2531f;
+  --brand-strong: #9e3f15;
+  --brand-soft: #fbe8dc;
+  --brand-ink: #ffffff;
+  --gold: #e3a21f;
+  --gold-soft: #fdf1d6;
+  --ok: #23804e;
+  --ok-soft: #e0f2e7;
+  --danger: #c2322b;
+  --danger-soft: #fbe4e1;
+  --info: #2c6aa8;
+  --info-soft: #e2edf8;
+  --shadow: 36 23 15;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #130d09;
+  --surface: #1d1510;
+  --surface-2: #281e17;
+  --line: #3a2c22;
+  --text: #f7eee6;
+  --muted: #b09d8e;
+  --brand: #e8703a;
+  --brand-strong: #f28c58;
+  --brand-soft: #3b1f12;
+  --brand-ink: #1a0f09;
+  --gold: #f2b441;
+  --gold-soft: #3a2c12;
+  --ok: #52c68a;
+  --ok-soft: #13301f;
+  --danger: #f06a5e;
+  --danger-soft: #3b1714;
+  --info: #6aa8e6;
+  --info-soft: #14283b;
+  --shadow: 0 0 0;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-cocoa: #2a1a10;
+  --color-cream: #fff6ea;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --radius-xl2: 1.25rem;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--bg);
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+}
+
+/* Safe areas (Dynamic Island, home indicator) */
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.pl-safe { padding-left: env(safe-area-inset-left); }
+.pr-safe { padding-right: env(safe-area-inset-right); }
+.mb-safe { margin-bottom: env(safe-area-inset-bottom); }
+.h-tabbar { height: calc(64px + env(safe-area-inset-bottom)); }
+.pb-tabbar { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+@media (min-width: 1024px) { .pb-tabbar { padding-bottom: 2.5rem; } }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 2px rgb(var(--shadow) / 0.04), 0 8px 24px -12px rgb(var(--shadow) / 0.10);
+}
+.dark .card { box-shadow: none; }
+
+.shadow-soft { box-shadow: 0 1px 2px rgb(var(--shadow) / 0.05), 0 12px 32px -16px rgb(var(--shadow) / 0.22); }
+.shadow-pop { box-shadow: 0 20px 50px -20px rgb(var(--shadow) / 0.45); }
+.dark .shadow-soft, .dark .shadow-pop { box-shadow: 0 20px 50px -24px rgb(0 0 0 / 0.8); }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+.tabular { font-variant-numeric: tabular-nums; }
+
+input, select, textarea, button { font: inherit; }
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+::selection { background: color-mix(in srgb, var(--brand) 25%, transparent); }
+
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+.grain {
+  background-image: radial-gradient(rgb(255 255 255 / 0.08) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+
+.kente {
+  background-image:
+    repeating-linear-gradient(90deg, rgb(255 255 255 / .07) 0 12px, transparent 12px 24px),
+    repeating-linear-gradient(0deg, rgb(0 0 0 / .06) 0 12px, transparent 12px 24px);
+}
+
+/* Receipt printing: only the receipt is printed, sized for 58–80 mm thermal printers or A4. */
+@media print {
+  @page { margin: 8mm; }
+  body * { visibility: hidden !important; }
+  .print-area, .print-area * { visibility: visible !important; }
+  .print-area {
+    position: absolute !important; left: 0; top: 0; width: 80mm !important;
+    box-shadow: none !important; border: none !important; background: #fff !important; color: #000 !important;
+  }
+  .no-print { display: none !important; }
+}
+
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+.skeleton { position: relative; overflow: hidden; background: var(--surface-2); }
+.skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgb(255 255 255 / .35), transparent); animation: shimmer 1.4s infinite; }
+.dark .skeleton::after { background: linear-gradient(90deg, transparent, rgb(255 255 255 / .06), transparent); }
