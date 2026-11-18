@@ -13,6 +13,7 @@ export type RouteName =
   | 'customer'
   | 'expenses'
   | 'reports'
+  | 'storefront'
   | 'settings'
   | 'onboarding'
   | 'notFound';
@@ -45,6 +46,8 @@ export function parseRoute(pathname: string, search = ''): Route {
       return r('expenses');
     case 'rapports':
       return r('reports');
+    case 'boutique':
+      return r('storefront');
     case 'reglages':
       return r('settings');
     case 'bienvenue':

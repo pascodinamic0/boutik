@@ -123,13 +123,33 @@ export function EmptyState({
   );
 }
 
-export function ProductThumb({ src, name, size = 56, className }: { src: string | null; name: string; size?: number; className?: string }) {
+export function ProductThumb({
+  src,
+  name,
+  size = 56,
+  className,
+  category,
+}: {
+  src: string | null;
+  name: string;
+  size?: number;
+  className?: string;
+  category?: string;
+}) {
   const initials = name
     .split(/\s+/)
     .slice(0, 2)
     .map((w) => w[0])
     .join('')
     .toUpperCase();
+  const hues: Record<string, [string, string]> = {
+    Alimentation: ['#f3d9b8', '#c2531f'],
+    Boissons: ['#d8e8f2', '#2c6aa8'],
+    'Produits frais': ['#dcefdc', '#23804e'],
+    Hygiène: ['#efe4f5', '#7a4d9a'],
+    Ménage: ['#e8e2d6', '#6b5846'],
+  };
+  const [from, to] = hues[category || ''] ?? ['#fbe8dc', '#e3a21f'];
   return (
     <div
       className={clsx('relative shrink-0 overflow-hidden rounded-2xl bg-surface-2', className)}
@@ -139,7 +159,10 @@ export function ProductThumb({ src, name, size = 56, className }: { src: string 
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-soft to-gold-soft font-bold text-brand">
+        <div
+          className="flex h-full w-full items-center justify-center font-[family-name:var(--font-fraunces)] text-[clamp(0.85rem,40%,1.25rem)] font-bold text-white"
+          style={{ background: `linear-gradient(145deg, ${from}, ${to})` }}
+        >
           {initials || <Package size={18} />}
         </div>
       )}

@@ -1,16 +1,18 @@
 'use client';
 import { motion } from 'motion/react';
-import { AlertTriangle, ArrowDownRight, ArrowUpRight, BookOpen, ChevronRight, Package, Plus, Receipt, ShoppingBag, TrendingUp, Wallet, Sparkles } from 'lucide-react';
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, BookOpen, ChevronRight, Package, Plus, Receipt, ShoppingBag, Store, TrendingUp, Wallet, Sparkles } from 'lucide-react';
 import { useMemo } from 'react';
 import { useApp } from '@/app-shell/AppContext';
 import { AppLink } from '@/app-shell/router';
 import { isLow, useCustomers, useExpenses, useProducts, useSaleItems, useSales } from '@/app-shell/data';
 import { BarChart } from '@/components/charts';
+import { ForecastPanel } from '@/components/ForecastPanel';
 import { EmptyState, MethodIcon, Money, ProductThumb, SectionTitle, StatCard, useMoney } from '@/components/common';
 import { Card } from '@/components/ui';
 import { useI18n } from '@/i18n';
 import { fmtTime } from '@/lib/dates';
 import { rangeBounds, summarize, startOfDay } from '@/lib/reports';
+import { reorderSuggestions } from '@/lib/reorder';
 
 export function Dashboard() {
   const { t } = useI18n();
@@ -37,6 +39,10 @@ export function Dashboard() {
   }, [sales, items, expenses, isOwner, user?.id]);
 
   const low = (products ?? []).filter(isLow).sort((a, b) => a.quantity - b.quantity);
+  const reorder = useMemo(
+    () => reorderSuggestions(products ?? [], sales ?? [], items ?? []),
+    [products, sales, items],
+  );
   const creditOut = (customers ?? []).reduce((s, c) => s + c.credit.balance, 0);
   const overdue = (customers ?? []).filter((c) => c.credit.overdueAmount > 0).length;
   const trialDays = shop ? Math.max(0, Math.ceil((new Date(shop.trial_ends_at).getTime() - Date.now()) / 86_400_000)) : 0;
@@ -96,8 +102,25 @@ export function Dashboard() {
         ) : null}
         <StatCard label={t('dash.countToday')} value={data?.today.count ?? '—'} sub={data ? `${t('rep.avgBasket')} ${m.fmt(data.today.avgBasket)}` : ''} icon={<Receipt size={17} />} tone="info" />
         <StatCard label={t('dash.creditOut')} value={m.fmt(creditOut)} sub={overdue ? t('dash.overdue', { n: overdue }) : `≈ ${m.fmtAlt(creditOut)}`} icon={<BookOpen size={17} />} tone="gold" testId="kpi-credit" />
-        <StatCard label={t('dash.lowStock')} value={low.length} sub={t('stock.products', { n: products?.length ?? 0 })} icon={<Package size={17} />} tone={low.length ? 'danger' : 'ok'} />
+        <StatCard label={t('dash.reorder')} value={reorder.length || low.length} sub={t('stock.products', { n: products?.length ?? 0 })} icon={<Package size={17} />} tone={(reorder.length || low.length) ? 'danger' : 'ok'} />
       </div>
+
+      {isOwner && (
+        <AppLink
+          href="/app/boutique"
+          className="flex items-center gap-3 border border-brand/30 bg-brand-soft px-4 py-3.5 text-sm font-semibold text-brand"
+          data-testid="dash-storefront"
+        >
+          <span className="flex h-10 w-10 items-center justify-center border border-brand/20 bg-surface text-brand">
+            <Store size={18} />
+          </span>
+          <span className="flex-1">
+            <span className="block font-bold">{t('dash.storefrontCta')}</span>
+            <span className="block text-xs font-medium text-brand/70">Lien, QR et WhatsApp</span>
+          </span>
+          <ChevronRight size={16} />
+        </AppLink>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <Card className="p-5">
@@ -111,34 +134,51 @@ export function Dashboard() {
           )}
         </Card>
 
-        <Card className="p-5">
-          <SectionTitle action={<AppLink href="/app/stock?filtre=bas" className="text-sm font-semibold text-brand">{t('common.seeAll')}</AppLink>}>
-            <span className="inline-flex items-center gap-2">
-              <AlertTriangle size={16} className="text-danger" /> {t('dash.lowStock')}
-            </span>
-          </SectionTitle>
-          {low.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted">{t('dash.lowStockEmpty')}</p>
+        <section className="border border-line bg-surface p-5" data-testid="reorder-card">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+                <AlertTriangle size={14} className="text-danger" /> {t('dash.reorder')}
+              </p>
+              <p className="mt-1 font-[family-name:var(--font-fraunces)] text-4xl font-bold leading-none tabular text-ink">
+                {reorder.length}
+              </p>
+            </div>
+            <AppLink href="/app/stock?filtre=bas" className="text-sm font-bold text-brand">
+              {t('common.seeAll')}
+            </AppLink>
+          </div>
+          {reorder.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted">{t('dash.reorderEmpty')}</p>
           ) : (
             <ul className="divide-y divide-line" data-testid="low-stock-list">
-              {low.slice(0, 5).map((p) => (
-                <li key={p.id}>
-                  <AppLink href={`/app/stock/${p.id}`} className="flex items-center gap-3 py-2.5">
-                    <ProductThumb src={p.photo} name={p.name} size={42} />
+              {reorder.slice(0, 5).map((r) => (
+                <li key={r.product.id}>
+                  <AppLink href={`/app/stock/${r.product.id}`} className="flex items-center gap-3 py-3">
+                    <ProductThumb src={r.product.photo} name={r.product.name} size={52} className="!rounded-xl" />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold">{p.name}</span>
-                      <span className="text-xs text-muted">{t('stock.lowThreshold')} {p.low_stock}</span>
+                      <span className="block truncate text-sm font-semibold">{r.product.name}</span>
+                      <span className="text-xs text-muted">
+                        {r.daysOfStock != null ? t('dash.daysLeft', { n: r.daysOfStock }) : t('dash.daysUnknown')}
+                        {' · '}
+                        {t('stock.lowThreshold')} {r.product.low_stock}
+                      </span>
                     </span>
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${p.quantity <= 0 ? 'bg-danger text-white' : 'bg-danger-soft text-danger'}`}>
-                      {p.quantity} {p.unit}
+                    <span className="text-right">
+                      <span className={`block font-[family-name:var(--font-fraunces)] text-2xl font-bold tabular leading-none ${r.product.quantity <= 0 ? 'text-danger' : 'text-ink'}`}>
+                        {r.product.quantity}
+                      </span>
+                      <span className="text-[11px] font-medium text-muted">{r.product.unit}</span>
                     </span>
                   </AppLink>
                 </li>
               ))}
             </ul>
           )}
-        </Card>
+        </section>
       </div>
+
+      {isOwner && <ForecastPanel compact />}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <Card className="p-5">

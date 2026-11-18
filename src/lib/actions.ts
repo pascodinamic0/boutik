@@ -143,7 +143,16 @@ export interface ProductInput {
 
 export async function addProduct(a: Actor, input: ProductInput, initialQty: number): Promise<Product> {
   const now = nowIso();
-  const p: Product = { id: uuid(), shop_id: a.shop.id, quantity: 0, archived: false, created_at: now, updated_at: now, ...input };
+  const p: Product = {
+    id: uuid(),
+    shop_id: a.shop.id,
+    quantity: 0,
+    archived: false,
+    storefront_hidden: false,
+    created_at: now,
+    updated_at: now,
+    ...input,
+  };
   const ops: Op[] = [{ table: 'products', kind: 'insert', rows: [p as never] }];
   let mv: Movement | null = null;
   if (initialQty > 0) {
@@ -169,7 +178,11 @@ export async function addProduct(a: Actor, input: ProductInput, initialQty: numb
   return { ...p, quantity: initialQty };
 }
 
-export async function updateProduct(a: Actor, id: string, patch: Partial<ProductInput> & { archived?: boolean }) {
+export async function updateProduct(
+  a: Actor,
+  id: string,
+  patch: Partial<ProductInput> & { archived?: boolean; storefront_hidden?: boolean },
+) {
   const db = getDb();
   const now = nowIso();
   await commit(a.shop.id, 'product', [{ table: 'products', kind: 'update', rows: [{ id, ...patch, updated_at: now }] }], async () => {
@@ -286,10 +299,33 @@ export async function deleteExpense(a: Actor, id: string) {
 // ---------------------------------------------------------------------------
 // Shop settings
 // ---------------------------------------------------------------------------
-export async function updateShop(a: Actor, patch: Partial<Pick<Shop, 'name' | 'commune' | 'shop_type' | 'exchange_rate' | 'phone'>>) {
+export type ShopPatch = Partial<
+  Pick<
+    Shop,
+    | 'name'
+    | 'commune'
+    | 'shop_type'
+    | 'exchange_rate'
+    | 'phone'
+    | 'storefront_enabled'
+    | 'storefront_slug'
+    | 'storefront_whatsapp'
+    | 'storefront_description'
+    | 'storefront_theme'
+  >
+>;
+
+export async function updateShop(a: Actor, patch: ShopPatch) {
   const db = getDb();
-  await commit(a.shop.id, 'shop', [{ table: 'shops', kind: 'update', rows: [{ id: a.shop.id, ...patch }] }], async () => {
+  const next = { ...patch };
+  if (next.storefront_theme != null) {
+    const { isStorefrontThemeId, DEFAULT_STOREFRONT_THEME } = await import('@/lib/storefront-themes');
+    if (!isStorefrontThemeId(next.storefront_theme)) {
+      next.storefront_theme = DEFAULT_STOREFRONT_THEME;
+    }
+  }
+  await commit(a.shop.id, 'shop', [{ table: 'shops', kind: 'update', rows: [{ id: a.shop.id, ...next }] }], async () => {
     const s = await db.shops.get(a.shop.id);
-    if (s) await db.shops.put({ ...s, ...patch });
+    if (s) await db.shops.put({ ...s, ...next });
   });
 }

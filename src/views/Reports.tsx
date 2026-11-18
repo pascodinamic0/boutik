@@ -5,6 +5,7 @@ import { BarChart, Donut, HBar } from '@/components/charts';
 import { METHOD_STYLE, PageHeader, SectionTitle, StatCard, useMoney } from '@/components/common';
 import { Card, Segmented } from '@/components/ui';
 import { useI18n } from '@/i18n';
+import { ForecastPanel } from '@/components/ForecastPanel';
 import { rangeBounds, summarize, type RangeKey } from '@/lib/reports';
 import { BookOpen, Receipt, TrendingUp, Wallet, Coins, ShoppingBasket } from 'lucide-react';
 
@@ -121,6 +122,8 @@ export function Reports() {
           {t('rep.discounts')} : {m.fmt(s.discounts)}
         </p>
       )}
+
+      <ForecastPanel />
     </div>
   );
 }

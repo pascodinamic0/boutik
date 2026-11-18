@@ -18,14 +18,14 @@ Toutes les photos proviennent de [Pexels](https://www.pexels.com) et sont utilis
 ## Produits de démonstration (`public/products`)
 
 - `riz.webp` — https://www.pexels.com/photo/38781904/
-- `farine-mais.webp` — https://www.pexels.com/photo/13675717/
+- `farine-mais.webp` — image générée (farine de maïs / fufu), remplace une photo Pexels qui montrait surtout du riz
 - `huile.webp` — https://www.pexels.com/photo/12284682/
 - `sucre.webp` — https://www.pexels.com/photo/7965893/
 - `sel.webp` — https://www.pexels.com/photo/7717461/
 - `lait-poudre.webp` — https://www.pexels.com/photo/10994727/
 - `tomate.webp` — https://www.pexels.com/photo/37316395/
 - `sardines.webp` — https://www.pexels.com/photo/6901802/
-- `spaghetti.webp` — https://www.pexels.com/photo/546945/
+- `spaghetti.webp` — image générée (spaghetti secs), remplace une photo de plat cuisiné
 - `soda.webp` — https://www.pexels.com/photo/6920721/
 - `biere.webp` — https://www.pexels.com/photo/5537952/
 - `eau.webp` — https://www.pexels.com/photo/10376368/

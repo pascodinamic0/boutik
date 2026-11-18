@@ -2,9 +2,20 @@
  * Generated from scripts/sw-template.js at build time (VERSION is injected). */
 const VERSION = '__VERSION__';
 const SHELL = `boutik-shell-${VERSION}`;
-const STATIC = 'boutik-static-v1'; // content-hashed / immutable assets, kept across versions
+const STATIC = `boutik-static-${VERSION}`; // versioned so stale CSS hashes cannot outlive a deploy
 const RUNTIME = `boutik-runtime-${VERSION}`;
-const PAGES = ['/app', '/', '/connexion', '/confidentialite', '/conditions'];
+const STOREFRONT = `boutik-storefront-${VERSION}`; // versioned — never serve HTML that points at deleted CSS
+const PAGES = [
+  '/app',
+  '/',
+  '/connexion',
+  '/confidentialite',
+  '/conditions',
+  '/b/demo',
+  '/b/demo?theme=cinema',
+  '/b/demo?theme=marche',
+  '/b/demo?theme=atelier',
+];
 const PRECACHE = __PRECACHE__;
 
 const ASSET_RE = /\/_next\/static\/[^"'\s\\)<>]+/g;
@@ -59,7 +70,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      const keep = [SHELL, STATIC, RUNTIME];
+      const keep = [SHELL, STATIC, RUNTIME, STOREFRONT];
       for (const k of await caches.keys()) if (!keep.includes(k)) await caches.delete(k);
       if (self.registration.navigationPreload) await self.registration.navigationPreload.enable().catch(() => {});
       await self.clients.claim();
@@ -72,6 +83,19 @@ self.addEventListener('message', (event) => {
   if (d.type === 'CACHE_URLS' && Array.isArray(d.urls)) {
     event.waitUntil(caches.open(STATIC).then((c) => cacheAll(c, d.urls.filter((u) => typeof u === 'string' && u.startsWith('/')))));
   }
+  if (d.type === 'CACHE_STOREFRONT' && Array.isArray(d.urls)) {
+    event.waitUntil(
+      (async () => {
+        const sf = await caches.open(STOREFRONT);
+        await cacheAll(sf, d.urls.filter((u) => typeof u === 'string' && u.startsWith('/')));
+        const st = await caches.open(STATIC);
+        await cacheAll(
+          st,
+          d.urls.filter((u) => typeof u === 'string' && /^\/(products|img|icons)\//.test(u)),
+        );
+      })(),
+    );
+  }
   if (d.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
@@ -80,19 +104,29 @@ function timeout(ms) {
 }
 
 async function handleNavigation(event, url) {
-  const shell = await caches.open(SHELL);
-  const key = url.pathname.replace(/\/+$/, '') || '/';
+  const isStorefront = url.pathname.startsWith('/b/');
+  const shell = await caches.open(isStorefront ? STOREFRONT : SHELL);
+  // Include search so /b/demo?theme=atelier is not overwritten by /b/demo (cinema).
+  const key = isStorefront
+    ? `${url.pathname.replace(/\/+$/, '') || '/b'}${url.search}`
+    : url.pathname.replace(/\/+$/, '') || '/';
   try {
     const preload = event.preloadResponse ? await event.preloadResponse : null;
-    const res = preload || (await Promise.race([fetch(event.request), timeout(6000)]));
+    // Prefer a real network response; only race a long timeout so headless/slow
+    // clients never fall back to HTML that references deleted CSS chunks.
+    const res = preload || (await Promise.race([fetch(event.request), timeout(20000)]));
     if (res && res.ok && res.type === 'basic') {
       const copy = res.clone();
       event.waitUntil(shell.put(key, copy));
-      if (key.startsWith('/app')) event.waitUntil(shell.put('/app', res.clone()));
+      if (key.startsWith('/app')) event.waitUntil(caches.open(SHELL).then((c) => c.put('/app', res.clone())));
     }
     return res;
   } catch (e) {
-    const hit = (await shell.match(key)) || (key.startsWith('/app') ? await shell.match('/app') : null) || (await shell.match('/'));
+    // Never fall back across theme query strings (stale /b/demo must not paint over ?theme=).
+    const hit =
+      (await shell.match(key)) ||
+      (key.startsWith('/app') ? await caches.open(SHELL).then((c) => c.match('/app')) : null) ||
+      (!isStorefront ? await caches.open(SHELL).then((c) => c.match('/')) : null);
     if (hit) return hit;
     return new Response(
       '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boutik</title><body style="font-family:system-ui;background:#faf6f0;color:#24170f;display:grid;place-items:center;min-height:100vh;margin:0;text-align:center"><div><h1>Hors ligne</h1><p>Connectez-vous une première fois à internet pour installer Boutik.</p></div>',
@@ -132,7 +166,14 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith('/api/') || url.pathname === '/sw.js') return;
+  if (url.pathname === '/sw.js') return;
+
+  // Public storefront API: network-first, cached for offline catalogue
+  if (url.pathname.startsWith('/api/storefront/')) {
+    event.respondWith(networkFirst(req, STOREFRONT));
+    return;
+  }
+  if (url.pathname.startsWith('/api/')) return;
 
   if (req.mode === 'navigate') {
     event.respondWith(handleNavigation(event, url));
@@ -141,11 +182,20 @@ self.addEventListener('fetch', (event) => {
   // RSC payloads: network only (Next falls back to a full navigation when offline)
   if (req.headers.get('RSC') || url.searchParams.has('_rsc')) return;
 
+  // CSS + JS must never paint a previous deploy's UI (e.g. old consent card on /b/demo).
+  if (url.pathname.startsWith('/_next/static/') && (url.pathname.endsWith('.css') || url.pathname.endsWith('.js'))) {
+    event.respondWith(networkFirst(req, STATIC));
+    return;
+  }
   if (url.pathname.startsWith('/_next/static/')) {
     event.respondWith(cacheFirst(req, STATIC));
     return;
   }
-  if (/^\/(products|img|icons|splash)\//.test(url.pathname) || /\.(png|svg|webp|jpg|jpeg|ico|woff2?)$/.test(url.pathname)) {
+  if (
+    url.pathname.includes('/manifest.webmanifest') ||
+    /^\/(products|img|icons|splash)\//.test(url.pathname) ||
+    /\.(png|svg|webp|jpg|jpeg|ico|woff2?)$/.test(url.pathname)
+  ) {
     event.respondWith(cacheFirst(req, STATIC));
     return;
   }
