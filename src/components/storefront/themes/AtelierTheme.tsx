@@ -1,32 +1,59 @@
 'use client';
-import clsx from 'clsx';
 import { motion } from 'motion/react';
 import { MessageCircle, Plus, Search, SlidersHorizontal } from 'lucide-react';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import {
+  CatalogueSkeleton,
+  CategoryRail,
+  ProductRail,
+  PromoStrip,
+  SfSection,
+  StockBadge,
+  StorefrontFooter,
+  TrustStrip,
+} from '@/components/storefront/StorefrontBlocks';
 import { ProductArt } from '@/components/storefront/ProductArt';
 import { StorefrontChrome, useStorefrontState } from '@/components/storefront/StorefrontShell';
 import { formatMoney } from '@/lib/money';
-import { availabilityLabel, storefrontContactUrl, type PublicStorefront } from '@/lib/storefront';
+import { bestsellers, featuredProduct, nouveautes, promoProducts, storefrontTrust } from '@/lib/storefront-present';
+import { storefrontContactUrl, type PublicStorefront } from '@/lib/storefront';
 
-/** Atelier — minimal monochrome luxury. Huge photography, slow elegant motion. */
+/** Atelier — quiet luxury, monochrome, big photography, serif. */
 export function AtelierTheme({ shop }: { shop: PublicStorefront }) {
   const state = useStorefrontState(shop);
   const { reduce, q, setQ, cat, setCat, list, cats, activeFilters, openFilters, openProduct, add } = state;
-  const hero = shop.products.find((p) => p.availability !== 'out' && p.photo) ?? shop.products[0];
+  const shortName = shop.name.length > 30 ? `${shop.name.slice(0, 28)}…` : shop.name;
+  const trust = storefrontTrust(shop);
+  const hero = featuredProduct(shop);
+  const hits = bestsellers(shop, 5);
+  const news = nouveautes(shop, 5);
+  const promo = promoProducts(shop, 2);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setReady(true), 140);
+    return () => window.clearTimeout(t);
+  }, []);
 
   return (
-    <StorefrontChrome shop={shop} state={state}>
-      <div className="sf-root min-h-dvh bg-[#f7f6f4] text-[#111]" data-theme="atelier">
-        <header className="sticky top-0 z-40 border-b border-black/[0.06] bg-[#f7f6f4]/85 pt-safe backdrop-blur-md">
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
+    <StorefrontChrome
+      shop={shop}
+      state={state}
+      cartClassName="!border-black/10 !bg-[#111] !shadow-none"
+      whatsappClassName="bg-white text-[#111]"
+      sheetClassName="bg-[#f7f6f4] text-[#111]"
+    >
+      <div
+        className="sf-root min-h-dvh bg-[#f7f6f4] text-[#111]"
+        data-theme="atelier"
+        style={{ ['--sf-header-h' as string]: '52px' }}
+      >
+        <header className="sticky top-0 z-40 border-b border-black/8 bg-[#f7f6f4]/88 pt-safe backdrop-blur-xl">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <div className="min-w-0">
-              <p
-                className="truncate font-[family-name:var(--font-fraunces)] text-[17px] font-medium tracking-[-0.02em]"
-                data-testid="sf-header-shop"
-              >
-                {shop.name}
+              <p className="truncate font-[family-name:var(--font-fraunces)] text-[16px] font-semibold tracking-tight" data-testid="sf-header-shop">
+                {shortName}
               </p>
-              <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.22em] text-[#888]">
+              <p className="truncate text-[10px] font-medium uppercase tracking-[0.2em] text-[#777]">
                 {shop.commune || 'Atelier'}
               </p>
             </div>
@@ -35,186 +62,216 @@ export function AtelierTheme({ shop }: { shop: PublicStorefront }) {
                 href={storefrontContactUrl(shop)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-9 items-center gap-2 border border-[#111] px-4 text-[11px] font-medium uppercase tracking-[0.14em] text-[#111] transition-colors hover:bg-[#111] hover:text-white"
+                className="inline-flex h-11 items-center gap-2 border border-black/15 bg-transparent px-4 text-[12px] font-semibold uppercase tracking-[0.08em] active:scale-95"
               >
-                <MessageCircle size={13} /> Contacter
+                <MessageCircle size={14} /> Contacter
               </a>
             )}
           </div>
         </header>
 
-        {/* Full-bleed photography hero — layout via .sf-atelier-hero (plain CSS) */}
-        <section className="relative">
-          <div className="sf-atelier-hero">
-            <div className="sf-atelier-hero-media">
-              {hero && (
+        {/* First screen: XXL photo + quiet copy */}
+        <section className="sf-atelier-hero border-b border-black/8">
+          <div className="sf-atelier-hero-media relative" data-testid="sf-stage">
+            {hero && (
+              <>
                 <ProductArt
                   src={hero.photo}
                   name={hero.name}
                   category={hero.category}
                   rounded="rounded-none"
-                  className="h-full w-full"
+                  className="absolute inset-0 h-full w-full"
                   priority
                 />
-              )}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-[#f7f6f4]/50" />
-            </div>
-            <div className="flex flex-col justify-center px-5 py-10 sm:px-10 sm:py-14 lg:px-14">
-              {shop.demo && (
-                <p className="mb-5 text-[10px] font-medium uppercase tracking-[0.2em] text-[#888]" data-testid="demo-banner">
-                  Démonstration
-                </p>
-              )}
-              <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#888]">
-                {shop.commune || 'Kinshasa'}
-              </p>
-              <h1
-                className="mt-4 max-w-[11ch] font-display text-[clamp(2.6rem,7vw,4.5rem)] font-semibold leading-[0.95] tracking-[-0.035em]"
-                data-testid="storefront-name"
-              >
-                {shop.name}
-              </h1>
-              {shop.description && (
-                <p className="mt-6 max-w-sm text-[15px] font-light leading-relaxed text-[#555]">{shop.description}</p>
-              )}
-              <div className="mt-8 flex flex-wrap gap-3">
-                {shop.whatsapp && (
-                  <a
-                    href={storefrontContactUrl(shop)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-12 items-center bg-[#111] px-7 text-[12px] font-medium uppercase tracking-[0.16em] !text-white"
-                  >
-                    Commander
-                  </a>
-                )}
-                <a
-                  href="#catalogue"
-                  className="inline-flex h-12 items-center border border-[#111]/25 px-6 text-[12px] font-medium uppercase tracking-[0.16em]"
+                <button
+                  type="button"
+                  onClick={() => openProduct(hero)}
+                  className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3 border border-white/40 bg-white/90 px-4 py-3 text-left backdrop-blur-sm sm:left-6 sm:right-auto sm:min-w-[260px]"
                 >
-                  Collection
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777]">{hero.category}</p>
+                    <p className="mt-1 truncate font-[family-name:var(--font-fraunces)] text-[15px] font-semibold">{hero.name}</p>
+                  </div>
+                  <p className="shrink-0 font-[family-name:var(--font-fraunces)] text-[1.35rem] font-semibold tabular">{formatMoney(hero.sell_price, shop.currency)}</p>
+                </button>
+              </>
+            )}
+          </div>
+
+          <div className="flex flex-col justify-center px-4 py-10 sm:px-8 sm:py-14 lg:px-12 lg:py-16">
+            {shop.demo && (
+              <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#888]" data-testid="demo-banner">
+                Démonstration
+              </p>
+            )}
+            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#888]">
+              {shop.commune || 'Kinshasa'}
+            </p>
+            <h1
+              className="mt-4 max-w-[12ch] font-[family-name:var(--font-fraunces)] text-[clamp(2.5rem,7vw,4.5rem)] font-semibold leading-[0.95] tracking-[-0.03em]"
+              data-testid="storefront-name"
+            >
+              {shop.name}
+            </h1>
+            {shop.description && (
+              <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-[#555]">{shop.description}</p>
+            )}
+            <TrustStrip
+              signals={trust}
+              className="mt-6"
+              chipClassName="rounded-none border-black/12 bg-transparent text-[#444]"
+            />
+            <div className="mt-8 flex flex-wrap gap-3">
+              {shop.whatsapp && (
+                <a
+                  href={storefrontContactUrl(shop)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-12 items-center bg-[#111] px-6 text-[12px] font-semibold uppercase tracking-[0.12em] text-white"
+                >
+                  Commander
                 </a>
-              </div>
-              <div className="mt-12 border-t border-black/[0.08] pt-6" data-testid="sf-en-rayon">
-                <p className="font-display text-[3.25rem] font-semibold tabular leading-none tracking-tight">
-                  {shop.products.length}
-                </p>
-                <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.2em] text-[#888]">Pièces en collection</p>
-                <p className="mt-1 text-sm font-light text-[#666]">Sélection · commande WhatsApp</p>
+              )}
+              <a
+                href="#catalogue"
+                className="inline-flex h-12 items-center border border-black/20 px-5 text-[12px] font-semibold uppercase tracking-[0.12em]"
+              >
+                Collection
+              </a>
+            </div>
+            <div className="mt-10 flex items-baseline gap-3 border-t border-black/8 pt-6" data-testid="sf-en-rayon">
+              <p className="font-[family-name:var(--font-fraunces)] text-[clamp(2.25rem,4vw,3.25rem)] font-semibold tabular leading-none">
+                {shop.products.length}
+              </p>
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#888]">Pièces en collection</p>
+                <p className="mt-1 text-[13px] text-[#666]">Sélection · commande WhatsApp</p>
               </div>
             </div>
           </div>
         </section>
 
-        <main id="catalogue" className="mx-auto max-w-5xl scroll-mt-24 px-5 pb-44 pt-12 sm:px-8">
-          <div className="mb-8 flex flex-col gap-4 border-b border-black/[0.06] pb-8 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-[#888]">Collection</p>
-              <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-                Sélection du jour
-              </h2>
-            </div>
-            <div className="flex gap-2">
-              <div className="relative flex-1 sm:w-56">
-                <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#aaa]" />
-                <input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Rechercher…"
-                  className="h-11 w-full border border-black/[0.1] bg-transparent pl-9 pr-3 text-[15px] outline-none focus:border-[#111]"
-                  data-testid="storefront-search"
-                />
+        <SfSection className="border-b border-black/8 py-2" pad>
+          <CategoryRail
+            cats={cats}
+            total={shop.products.length}
+            cat={cat}
+            setCat={setCat}
+            sticky
+            className="bg-[#f7f6f4]/95 backdrop-blur-md"
+            activeClass="rounded-none bg-[#111] text-white"
+            idleClass="rounded-none border border-black/10 bg-transparent text-[#333]"
+          />
+        </SfSection>
+
+        <SfSection className="py-12" pad>
+          <ProductRail
+            title="Sélection"
+            subtitle="Pièces mises en avant"
+            products={hits}
+            currency={shop.currency}
+            onOpen={openProduct}
+            onAdd={(p) => add(p, 1)}
+            tone="light"
+          />
+        </SfSection>
+
+        {promo.length > 0 && (
+          <SfSection className="pb-8" pad>
+            <PromoStrip
+              products={promo}
+              currency={shop.currency}
+              onOpen={openProduct}
+              className="rounded-none border-black/10 bg-[#ebe8e2] text-[#111]"
+            />
+          </SfSection>
+        )}
+
+        <SfSection className="py-8" pad>
+          <ProductRail
+            title="Nouveautés"
+            subtitle="Ajouts récents"
+            products={news}
+            currency={shop.currency}
+            onOpen={openProduct}
+            onAdd={(p) => add(p, 1)}
+            tone="light"
+          />
+        </SfSection>
+
+        <main id="catalogue" className="scroll-mt-24 border-t border-black/8 bg-white pb-40 pt-10">
+          <SfSection pad>
+            <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="font-[family-name:var(--font-fraunces)] text-[clamp(1.75rem,3vw,2.25rem)] font-semibold tracking-tight">
+                  Collection
+                </h2>
+                <p className="mt-2 text-[13px] text-[#666]">Toute la sélection, filtrable</p>
               </div>
-              <button
-                type="button"
-                onClick={openFilters}
-                className="inline-flex h-11 items-center gap-2 border border-black/[0.1] px-4 text-[11px] font-medium uppercase tracking-[0.12em]"
-                data-testid="sf-filters"
-              >
-                <SlidersHorizontal size={14} /> Filtres
-                {activeFilters > 0 && <span className="text-[#111]">{activeFilters}</span>}
-              </button>
-            </div>
-          </div>
-
-          <div className="no-scrollbar mb-10 flex gap-6 overflow-x-auto border-b border-black/[0.06] pb-3">
-            {[{ key: 'all', label: 'Tout', n: shop.products.length }, ...cats.map(([c, n]) => ({ key: c, label: c, n }))].map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                onClick={() => setCat(c.key)}
-                className={clsx(
-                  'shrink-0 pb-3 text-[12px] font-medium uppercase tracking-[0.14em] transition-colors',
-                  cat === c.key ? 'border-b-2 border-[#111] text-[#111]' : 'text-[#999]',
-                )}
-              >
-                {c.label} <span className="tabular opacity-60">{c.n}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Editorial vertical stack / wide photography cards */}
-          <ul className="flex flex-col gap-16 sm:gap-20" data-testid="storefront-grid">
-            {list.map((p, i) => (
-              <motion.li
-                key={p.id}
-                initial={reduce ? false : { opacity: 0, y: 40 }}
-                whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-60px' }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: reduce ? 0 : 0.05 }}
-                className={clsx(
-                  'grid items-center gap-6 sm:gap-10',
-                  i % 2 === 0 ? 'lg:grid-cols-[1.15fr_0.85fr]' : 'lg:grid-cols-[0.85fr_1.15fr]',
-                )}
-              >
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[320px] sm:flex-row">
+                <div className="relative flex-1">
+                  <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#999]" />
+                  <input
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    placeholder="Rechercher"
+                    className="h-12 w-full border border-black/12 bg-transparent pl-10 pr-3 text-[15px] outline-none focus:border-black/40"
+                    data-testid="storefront-search"
+                  />
+                </div>
                 <button
                   type="button"
-                  onClick={() => openProduct(p)}
-                  className={clsx('relative overflow-hidden bg-[#e8e6e2]', i % 2 === 1 && 'lg:order-2')}
-                  data-testid={`sf-product-${p.id}`}
+                  onClick={openFilters}
+                  className="inline-flex h-12 items-center justify-center gap-2 border border-black/12 px-4 text-[11px] font-semibold uppercase tracking-[0.12em]"
+                  data-testid="sf-filters"
                 >
-                  <div className="aspect-[4/5] sm:aspect-[5/6]">
-                    <ProductArt src={p.photo} name={p.name} category={p.category} rounded="rounded-none" className="h-full w-full" />
-                  </div>
-                  <span
-                    className={clsx(
-                      'absolute left-4 top-4 text-[10px] font-medium uppercase tracking-[0.16em]',
-                      p.availability === 'out' ? 'text-white/70' : 'text-white',
-                    )}
-                  >
-                    {availabilityLabel(p.availability)}
-                  </span>
+                  <SlidersHorizontal size={14} /> Filtres
+                  {activeFilters > 0 && <span className="bg-[#111] px-1.5 text-white">{activeFilters}</span>}
                 </button>
-                <div className={clsx('px-1 sm:px-2', i % 2 === 1 && 'lg:order-1 lg:text-right')}>
-                  <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#999]">{p.category || 'Pièce'}</p>
-                  <button type="button" onClick={() => openProduct(p)} className="mt-2 text-left lg:text-inherit">
-                    <h3 className="font-display text-[clamp(1.5rem,3.5vw,2.25rem)] font-semibold leading-tight tracking-[-0.02em]">
-                      {p.name}
-                    </h3>
-                  </button>
-                  <p className="mt-4 font-display text-2xl font-semibold tabular tracking-tight">
-                    {formatMoney(p.sell_price, shop.currency)}
-                  </p>
-                  <button
-                    type="button"
-                    disabled={p.availability === 'out'}
-                    onClick={(e) => {
-                      const card = e.currentTarget.closest('li')?.querySelector('[class*="aspect"]') as HTMLElement | null;
-                      add(p, 1, card);
-                    }}
-                    className="mt-6 inline-flex h-11 items-center gap-2 border border-[#111] px-5 text-[11px] font-medium uppercase tracking-[0.14em] disabled:opacity-30"
+              </div>
+            </div>
+
+            {!ready ? (
+              <CatalogueSkeleton tone="light" />
+            ) : (
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-3" data-testid="storefront-grid">
+                {list.map((p, i) => (
+                  <motion.li
+                    key={p.id}
+                    initial={reduce || i < 3 ? false : { opacity: 0, y: 24 }}
+                    whileInView={reduce || i < 3 ? undefined : { opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.45 }}
+                    className="flex flex-col"
                   >
-                    <Plus size={13} /> Ajouter
-                  </button>
-                </div>
-              </motion.li>
-            ))}
-          </ul>
+                    <button type="button" onClick={() => openProduct(p)} className="group text-left" data-testid={`sf-product-${p.id}`}>
+                      <div className="relative aspect-[4/5] overflow-hidden bg-[#e8e6e2]">
+                        <ProductArt src={p.photo} name={p.name} category={p.category} rounded="rounded-none" className="h-full w-full transition-transform duration-500 group-hover:scale-[1.03]" />
+                        <StockBadge availability={p.availability} className="absolute left-3 top-3 rounded-none" />
+                      </div>
+                      <p className="mt-4 text-[11px] font-medium uppercase tracking-[0.14em] text-[#888]">{p.category}</p>
+                      <p className="mt-1.5 font-[family-name:var(--font-fraunces)] text-[clamp(1.05rem,2vw,1.2rem)] font-semibold leading-snug">{p.name}</p>
+                      <p className="mt-3 font-[family-name:var(--font-fraunces)] text-[clamp(1.5rem,3vw,1.85rem)] font-semibold tabular leading-none">
+                        {formatMoney(p.sell_price, shop.currency)}
+                      </p>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={p.availability === 'out'}
+                      onClick={() => add(p, 1)}
+                      className="mt-4 inline-flex h-11 items-center justify-center gap-1.5 border border-black/15 text-[11px] font-semibold uppercase tracking-[0.12em] disabled:opacity-35"
+                    >
+                      <Plus size={14} /> Ajouter
+                    </button>
+                  </motion.li>
+                ))}
+              </ul>
+            )}
+            {ready && list.length === 0 && <p className="py-16 text-center text-sm text-[#777]">Aucun article pour ces filtres.</p>}
+          </SfSection>
         </main>
 
-        <footer className="border-t border-black/[0.06] py-12 text-center text-[11px] font-medium uppercase tracking-[0.16em] text-[#999]">
-          Propulsé par <Link href="/" className="text-[#111]">Boutik</Link> · thème Atelier
-        </footer>
+        <StorefrontFooter shop={shop} className="border-black/8 bg-[#f7f6f4]" mutedClassName="text-[#777]" />
       </div>
     </StorefrontChrome>
   );

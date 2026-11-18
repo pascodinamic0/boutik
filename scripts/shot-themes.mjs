@@ -14,9 +14,7 @@ const WIDTHS = [
 function isBrowserDefaultFont(family) {
   const f = (family || '').toLowerCase();
   if (!f) return true;
-  // Pass when branded webfonts are present
   if (/\bjakarta\b|\bfraunces\b/.test(f)) return false;
-  // Fail on classic unstyled browser defaults (Times / bare serif)
   if (/times new roman|\btimes\b/.test(f)) return true;
   if (/^\s*serif\s*$/.test(f)) return true;
   return false;
@@ -42,14 +40,12 @@ async function verifyViewport(page, theme, width) {
       const consent = document.querySelector('[data-testid="consent-banner"]');
 
       let stageOverlapsName = false;
-      if (nameEl && stage && width >= 1024 && theme === 'cinema') {
-        // Compare column boxes (overflow:hidden clips painted tiles; getBoundingClientRect of
-        // transformed children can extend outside without being visible).
+      if (nameEl && stage && width >= 1024) {
         const a = nameEl.getBoundingClientRect();
         const b = stage.getBoundingClientRect();
         const hit = !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
-        // Allow a few px of gutter noise; fail only on real column bleed
-        stageOverlapsName = hit && a.right - b.left > 12 && b.right - a.left > 12;
+        // Allow intentional stacked mobile-like layouts; fail only on side-by-side bleed
+        stageOverlapsName = hit && a.right - b.left > 24 && b.right - a.left > 24 && Math.abs(a.top - b.top) < 120;
       }
 
       const nameInFirstViewport = nameEl ? nameEl.getBoundingClientRect().top < vh * 0.72 : false;
@@ -62,6 +58,30 @@ async function verifyViewport(page, theme, width) {
               return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
             })()
           : false;
+      const consentAtTop = consent ? consent.getBoundingClientRect().top < 80 : false;
+      const headerShop = document.querySelector('[data-testid="sf-header-shop"]');
+      const consentCoversHeader =
+        consent && headerShop
+          ? (() => {
+              const a = consent.getBoundingClientRect();
+              const b = headerShop.getBoundingClientRect();
+              return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+            })()
+          : false;
+
+      const firstGrid = document.querySelector('[data-testid="storefront-grid"] [data-testid^="sf-product-"]');
+      const firstRail = document.querySelector('[data-testid^="sf-rail-product-"]');
+      const productVisible = (el) => {
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        const host = el.closest('li') || el;
+        const op = parseFloat(getComputedStyle(host).opacity || '1');
+        return r.top < vh && r.bottom > 0 && op > 0.5;
+      };
+      const firstProductVisible = productVisible(firstGrid) || productVisible(firstRail) || (stage ? inView(stage) : false);
+
+      const footer = document.querySelector('[data-testid="sf-footer"]');
+      const trust = document.querySelector('[data-testid="sf-trust"]');
 
       return {
         theme: root?.getAttribute('data-theme') || null,
@@ -74,16 +94,22 @@ async function verifyViewport(page, theme, width) {
         nameInFirstViewport,
         ctaInFirstViewport,
         consentCoversCta,
+        consentAtTop,
+        consentCoversHeader,
+        firstProductVisible,
         hasName: !!nameEl,
         hasGrid: !!document.querySelector('[data-testid="storefront-grid"]'),
         hasRayon: !!document.querySelector('[data-testid="sf-en-rayon"]'),
+        hasFooter: !!footer,
+        hasTrust: !!trust,
+        hasCategoryRail: !!document.querySelector('[data-testid="sf-category-rail"]'),
       };
     },
     { theme, width },
   );
 }
 
-async function shotTheme(theme, width, height, { keepConsent = false } = {}) {
+async function shotTheme(theme, width, height, { keepConsent = false, fullPage = false, nameOverride } = {}) {
   const browser = await chromium.launch();
   const context = await browser.newContext({
     viewport: { width, height },
@@ -103,7 +129,7 @@ async function shotTheme(theme, width, height, { keepConsent = false } = {}) {
   const url = theme === 'cinema' ? `${base}/b/demo` : `${base}/b/demo?theme=${theme}`;
   await page.goto(url, { waitUntil: 'networkidle' });
   await page.getByTestId('storefront-name').waitFor({ timeout: 20000 });
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(900);
   await page.waitForFunction(() => {
     const imgs = [...document.querySelectorAll('img')].filter((img) => {
       const r = img.getBoundingClientRect();
@@ -114,10 +140,10 @@ async function shotTheme(theme, width, height, { keepConsent = false } = {}) {
 
   const check = await verifyViewport(page, theme, width);
   const defaultFont = isBrowserDefaultFont(check.bodyFont) || isBrowserDefaultFont(check.rootFont);
-  const name = `storefront-theme-${theme}-${width}.png`;
-  await page.screenshot({ path: `${out}/${name}`, fullPage: false });
+  const name = nameOverride || `storefront-theme-${theme}-${width}${fullPage ? '-full' : ''}.png`;
+  await page.screenshot({ path: `${out}/${name}`, fullPage });
   await browser.close();
-  return { name, theme, width, url, defaultFont, ...check };
+  return { name, theme, width, url, defaultFont, fullPage, ...check };
 }
 
 async function shotOwnerPicker() {
@@ -157,11 +183,11 @@ async function shotOwnerPicker() {
 const results = [];
 for (const theme of THEMES) {
   for (const [w, h] of WIDTHS) {
-    results.push(await shotTheme(theme, w, h));
+    results.push(await shotTheme(theme, w, h, { fullPage: false }));
+    results.push(await shotTheme(theme, w, h, { fullPage: true }));
   }
 }
-// Consent placement check at 390 cinema (must not cover Commander)
-results.push(await shotTheme('cinema', 390, 844, { keepConsent: true }).then((r) => ({ ...r, name: 'storefront-consent-check-390.png', consentCheck: true })));
+results.push(await shotTheme('cinema', 390, 844, { keepConsent: true, nameOverride: 'storefront-consent-check-390.png' }).then((r) => ({ ...r, consentCheck: true })));
 results.push(await shotOwnerPicker());
 
 for (const w of [390, 820, 1440]) {
@@ -174,25 +200,32 @@ writeFileSync(`${out}/storefront-themes-verify.json`, JSON.stringify(results, nu
 console.log(JSON.stringify(results, null, 2));
 
 const failures = results.filter((r) => {
-  if (r.consentCheck) return r.consentCoversCta || r.defaultFont;
+  if (r.consentCheck) {
+    return r.consentCoversCta || r.consentAtTop || r.consentCoversHeader || r.defaultFont;
+  }
   if ('broken' in r) {
+    if (r.fullPage) {
+      return r.broken > 0 || !r.hasName || !r.hasGrid || !r.hasFooter || !THEMES.includes(r.theme);
+    }
     const mobileCinemaBad = r.theme === 'cinema' && r.width === 390 && (!r.nameInFirstViewport || !r.ctaInFirstViewport);
-    const desktopCinemaBad = r.theme === 'cinema' && r.width >= 1024 && r.stageOverlapsName;
+    const desktopOverlap = r.width >= 1024 && r.stageOverlapsName;
     const fontBad = r.width === 1440 && r.defaultFont;
     return (
       r.broken > 0 ||
       !r.hasName ||
       !r.hasGrid ||
+      !r.hasTrust ||
+      !r.hasCategoryRail ||
       !THEMES.includes(r.theme) ||
       mobileCinemaBad ||
-      desktopCinemaBad ||
+      desktopOverlap ||
       fontBad
     );
   }
   return r.ok === false;
 });
 if (failures.length) {
-  console.error('VERIFY_FAILED', failures);
+  console.error('VERIFY_FAILED', failures.map((f) => f.name || f));
   process.exit(1);
 }
 console.log('VERIFY_OK', results.length);

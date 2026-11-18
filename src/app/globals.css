@@ -161,7 +161,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
   border-radius: 0;
 }
 
-/* Public storefront — editorial paper + terracotta accent (portfolio-level contrast) */
+/* Public storefront — 8pt rhythm, theme tokens, no template chrome */
 .sf-root {
   --sf-base: #faf8f4;
   --sf-paper: #ffffff;
@@ -169,26 +169,53 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
   --sf-muted: #7a6554;
   --sf-line: rgb(10 10 10 / 0.08);
   --sf-accent: #c2531f;
-  /* Critical styles so a delayed CSS chunk never leaves Times New Roman / blue links */
+  --sf-header-h: 56px;
   font-family: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  background:
-    radial-gradient(ellipse 70% 45% at 85% 8%, rgb(194 83 31 / 0.07), transparent 50%),
-    radial-gradient(ellipse 50% 35% at 0% 100%, rgb(28 18 12 / 0.04), transparent 45%),
-    var(--sf-base);
+  background: var(--sf-base);
   color: var(--sf-ink);
 }
 .sf-root a { text-decoration: none; }
-/* Reset default blue links without forcing ink color onto filled CTAs */
 .sf-root a:not([class*='bg-']):not([class*='text-']) { color: inherit; }
 
 .sf-cinematic {
   font-feature-settings: 'ss01' on, 'cv11' on;
 }
 
-/* Atelier desktop hero — plain CSS (no fragile Tailwind arbitrary min()) */
+.sf-root[data-theme='cinema'] {
+  --sf-base: #0c0b0a;
+  --sf-paper: #161311;
+  --sf-ink: #f4efe8;
+  --sf-muted: rgb(244 239 232 / 0.55);
+  --sf-line: rgb(255 255 255 / 0.1);
+  --sf-accent: #e8c98a;
+  background: #0c0b0a;
+  color: #f4efe8;
+}
+.sf-root[data-theme='marche'] {
+  --sf-base: #fff8ec;
+  --sf-paper: #ffffff;
+  --sf-ink: #1a1208;
+  --sf-muted: #5c4030;
+  --sf-line: rgb(26 18 8 / 0.1);
+  --sf-accent: #ea580c;
+  background: #fff8ec;
+  color: #1a1208;
+}
+.sf-root[data-theme='atelier'] {
+  --sf-base: #f7f6f4;
+  --sf-paper: #ffffff;
+  --sf-ink: #111111;
+  --sf-muted: #777777;
+  --sf-line: rgb(0 0 0 / 0.08);
+  --sf-accent: #111111;
+  background: #f7f6f4;
+  color: #111;
+}
+
+/* Atelier desktop hero — plain CSS grid (no fragile Tailwind min()) */
 .sf-atelier-hero {
   display: grid;
-  max-width: 64rem;
+  max-width: 72rem;
   margin-inline: auto;
 }
 .sf-atelier-hero-media {
@@ -196,20 +223,17 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
   overflow: hidden;
   background: #e8e6e2;
   aspect-ratio: 4 / 5;
+  min-height: 280px;
 }
 @media (min-width: 640px) {
-  .sf-atelier-hero-media { aspect-ratio: 5 / 6; }
+  .sf-atelier-hero-media { aspect-ratio: 5 / 6; min-height: 360px; }
 }
 @media (min-width: 1024px) {
-  .sf-atelier-hero { grid-template-columns: 1fr 1fr; }
+  .sf-atelier-hero { grid-template-columns: 1.05fr 0.95fr; min-height: min(100dvh, 820px); }
   .sf-atelier-hero-media {
     aspect-ratio: auto;
-    min-height: 720px;
+    min-height: 100%;
   }
-}
-.sf-root[data-theme='atelier'] {
-  background: #f7f6f4;
-  color: #111;
 }
 
 .perspective-\[1200px\] {

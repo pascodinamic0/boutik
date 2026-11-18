@@ -76,8 +76,20 @@ export function useStorefrontState(shop: PublicStorefront) {
   const [active, setActive] = useState<PublicProduct | null>(null);
   const [sheetQty, setSheetQty] = useState(1);
   const cartBarRef = useRef<HTMLDivElement>(null);
+  const [consentOk, setConsentOk] = useState(false);
 
   useCatalogueOffline(shop);
+
+  useEffect(() => {
+    const sync = () => setConsentOk(!!localStorage.getItem('boutik.consent'));
+    sync();
+    window.addEventListener('boutik:consent', sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener('boutik:consent', sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
 
   const cats = useMemo(() => {
     const map = new Map<string, number>();
@@ -185,6 +197,7 @@ export function useStorefrontState(shop: PublicStorefront) {
     sheetQty,
     setSheetQty,
     cartBarRef,
+    consentOk,
     cats,
     countFor,
     list,
@@ -233,6 +246,7 @@ export function StorefrontChrome({
     sheetQty,
     setSheetQty,
     cartBarRef,
+    consentOk,
     cats,
     countFor,
     draftCount,
@@ -250,9 +264,10 @@ export function StorefrontChrome({
       <InstallShopPrompt shop={shop} />
       {children}
 
+      {/* Hide cart while consent is pending so the two never stack/overlap */}
       <div ref={cartBarRef} className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-safe">
         <AnimatePresence>
-          {cartCount > 0 && (
+          {cartCount > 0 && consentOk && (
             <motion.div
               initial={reduce ? false : { y: 80, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -262,17 +277,17 @@ export function StorefrontChrome({
             >
               <div
                 className={clsx(
-                  'flex items-center gap-2 rounded-full border border-black/10 bg-[#0a0a0a] p-1.5 pl-2 shadow-[0_20px_50px_rgb(0_0_0/0.25)]',
+                  'flex items-center gap-2 rounded-full border border-black/15 bg-[#0a0a0a] p-1.5 pl-2',
                   cartClassName,
                 )}
               >
                 <button
                   type="button"
                   onClick={() => setOpenCart(true)}
-                  className="flex min-w-0 flex-1 items-center gap-3 rounded-full px-3 py-2 text-left text-white active:scale-[0.99]"
+                  className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-full px-3 py-2 text-left text-white active:scale-[0.99]"
                   data-testid="open-cart"
                 >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#c2531f] text-sm font-bold tabular">{cartCount}</span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-sm font-bold tabular">{cartCount}</span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-[13px] font-bold">Commande</span>
                     <span className="block text-[12px] tabular text-white/65">{formatMoney(cartTotal, shop.currency)}</span>
@@ -320,21 +335,21 @@ export function StorefrontChrome({
                 </button>
               </div>
               <div className="p-5 sm:p-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8a7360]">{active.category}</p>
-                <h2 className="mt-1 font-[family-name:var(--font-fraunces)] text-2xl font-bold leading-tight sm:text-3xl">{active.name}</h2>
-                <p className="mt-3 font-[family-name:var(--font-fraunces)] text-4xl font-bold tabular text-[#c2531f]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] opacity-55">{active.category}</p>
+                <h2 className="mt-1 font-[family-name:var(--font-fraunces)] text-2xl font-semibold leading-tight sm:text-3xl">{active.name}</h2>
+                <p className="mt-3 font-[family-name:var(--font-fraunces)] text-[clamp(2rem,5vw,2.75rem)] font-semibold tabular leading-none">
                   {formatMoney(active.sell_price, shop.currency)}
                 </p>
-                <p className="mt-2 text-sm text-[#7a6554]">
+                <p className="mt-2 text-sm opacity-60">
                   {availabilityLabel(active.availability)} · {active.unit}
                 </p>
                 <div className="mt-6 flex items-center gap-4">
-                  <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white p-1">
-                    <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full" onClick={() => setSheetQty((n) => Math.max(1, n - 1))} aria-label="Moins">
+                  <div className="inline-flex items-center gap-1 rounded-full border border-current/15 p-1">
+                    <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full" onClick={() => setSheetQty((n) => Math.max(1, n - 1))} aria-label="Moins">
                       <Minus size={16} />
                     </button>
                     <span className="w-8 text-center text-base font-bold tabular">{sheetQty}</span>
-                    <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full" onClick={() => setSheetQty((n) => n + 1)} aria-label="Plus">
+                    <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full" onClick={() => setSheetQty((n) => n + 1)} aria-label="Plus">
                       <Plus size={16} />
                     </button>
                   </div>
@@ -345,7 +360,7 @@ export function StorefrontChrome({
                       add(active, sheetQty);
                       setActive(null);
                     }}
-                    className="flex h-12 flex-1 items-center justify-center rounded-full bg-[#0a0a0a] text-sm font-bold text-white disabled:opacity-40"
+                    className="flex h-12 flex-1 items-center justify-center rounded-full bg-[#111] text-sm font-bold text-white ring-1 ring-black/10 disabled:opacity-40"
                   >
                     Ajouter · {formatMoney(active.sell_price * sheetQty, shop.currency)}
                   </button>
