@@ -1,11 +1,13 @@
 'use client';
 import clsx from 'clsx';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Check, Copy, Eye, EyeOff, Link2, QrCode, Share2, Store } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useActor, useApp } from '@/app-shell/AppContext';
 import { useProducts } from '@/app-shell/data';
-import { PageHeader, ProductThumb, SectionTitle } from '@/components/common';
-import { Button, Card, Field, Input, Textarea, useToast } from '@/components/ui';
+import { ProductArt } from '@/components/storefront/ProductArt';
+import { PageHeader, SectionTitle } from '@/components/common';
+import { Button, Field, Input, Textarea, useToast } from '@/components/ui';
 import { useI18n } from '@/i18n';
 import { updateProduct, updateShop } from '@/lib/actions';
 import { isValidStorefrontSlug, normalizeStorefrontSlug } from '@/lib/storefront';
@@ -22,6 +24,7 @@ export function StorefrontSettings() {
   const actor = useActor();
   const toast = useToast();
   const products = useProducts();
+  const reduce = useReducedMotion();
 
   const [enabled, setEnabled] = useState(!!shop?.storefront_enabled);
   const [slug, setSlug] = useState(shop?.storefront_slug ?? normalizeStorefrontSlug(shop?.name ?? 'boutique'));
@@ -36,14 +39,14 @@ export function StorefrontSettings() {
   }, [slug]);
 
   const qrSrc = publicUrl
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=${encodeURIComponent(publicUrl)}`
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=10&color=1c120c&bgcolor=fffaf3&data=${encodeURIComponent(publicUrl)}`
     : '';
 
   if (!isOwner) {
     return (
       <div>
         <PageHeader title={t('sf.title')} back="/app" />
-        <p className="rounded-2xl bg-info-soft px-4 py-3 text-sm text-info">{t('sf.ownerOnly')}</p>
+        <p className="border border-line bg-info-soft px-4 py-3 text-sm text-info">{t('sf.ownerOnly')}</p>
       </div>
     );
   }
@@ -109,141 +112,162 @@ export function StorefrontSettings() {
     }
   };
 
+  const enter = reduce ? undefined : { opacity: 0, y: 12 };
+
   return (
     <div className="space-y-6">
       <PageHeader title={t('sf.title')} subtitle={t('sf.subtitle')} back="/app" />
 
-      <Card className="overflow-hidden p-0">
-        <div className="relative bg-gradient-to-br from-[#d8622b] via-[#b8491a] to-[#7e2d10] p-5 text-white">
-          <div className="kente pointer-events-none absolute inset-0 opacity-50" />
-          <div className="relative flex items-start gap-3">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
-              <Store size={22} />
-            </span>
-            <div>
-              <p className="text-sm font-medium text-white/80">{t('sf.heroLabel')}</p>
-              <p className="mt-1 text-lg font-bold leading-snug">{shop?.name}</p>
-              <p className="mt-1 text-sm text-white/75">{enabled ? t('sf.statusOn') : t('sf.statusOff')}</p>
+      <motion.section
+        initial={enter}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden border border-line bg-gradient-to-br from-[#d8622b] via-[#b8491a] to-[#7e2d10] text-white"
+      >
+        <div className="kente pointer-events-none absolute inset-0 opacity-40" />
+        <div className="relative flex items-start gap-4 p-5 sm:p-7">
+          <span className="flex h-14 w-14 items-center justify-center border border-white/25 bg-white/10">
+            <Store size={24} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/70">{t('sf.heroLabel')}</p>
+            <p className="mt-1 font-[family-name:var(--font-fraunces)] text-2xl font-bold leading-tight sm:text-3xl">{shop?.name}</p>
+            <p className="mt-2 text-sm text-white/80">{enabled ? t('sf.statusOn') : t('sf.statusOff')}</p>
+          </div>
+        </div>
+      </motion.section>
+
+      <section className="space-y-5 border border-line bg-surface p-5">
+        <label className="flex cursor-pointer items-center justify-between gap-3 border border-line px-4 py-3">
+          <span>
+            <span className="block text-sm font-semibold">{t('sf.enable')}</span>
+            <span className="text-xs text-muted">{t('sf.enableHint')}</span>
+          </span>
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => setEnabled(e.target.checked)}
+            className="h-5 w-5 accent-[var(--brand)]"
+            data-testid="sf-enabled"
+          />
+        </label>
+
+        <Field label={t('sf.slug')}>
+          <div className="flex items-center gap-2">
+            <span className="shrink-0 text-sm text-muted">/b/</span>
+            <Input
+              value={slug}
+              onChange={(e) => setSlug(normalizeStorefrontSlug(e.target.value) || e.target.value.toLowerCase())}
+              placeholder="ma-boutique"
+              data-testid="sf-slug"
+            />
+          </div>
+        </Field>
+
+        <Field label={t('sf.whatsapp')}>
+          <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+243 81 234 5678" data-testid="sf-whatsapp" />
+        </Field>
+
+        <Field label={t('sf.description')}>
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value.slice(0, 280))}
+            rows={3}
+            placeholder={t('sf.descriptionPh')}
+            data-testid="sf-description"
+          />
+          <p className="mt-1 text-right text-[11px] text-muted">{description.length}/280</p>
+        </Field>
+
+        <Button onClick={save} loading={busy} className="w-full" data-testid="sf-save">
+          {t('common.save')}
+        </Button>
+      </section>
+
+      <section className="overflow-hidden border border-[#e5d8c8] bg-[#fffaf3]">
+        <div className="border-b border-[#e5d8c8] bg-[radial-gradient(ellipse_at_top_left,rgb(194_83_31/0.08),transparent_55%)] px-5 py-6 sm:px-7">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a7360]">{t('sf.link')}</p>
+          <h2 className="mt-2 max-w-md font-[family-name:var(--font-fraunces)] text-[clamp(1.6rem,5vw,2.15rem)] font-bold leading-[1.05] tracking-tight text-[#1c120c]">
+            {t('sf.qrHint')}
+          </h2>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 flex-1 items-center gap-2 border border-[#e5d8c8] bg-white px-3 py-3">
+              <Link2 size={16} className="shrink-0 text-[#8a7360]" />
+              <a href={publicUrl || '#'} className="truncate text-sm font-semibold text-[#c2531f]" data-testid="sf-url">
+                {publicUrl || '—'}
+              </a>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={copyLink} className="flex-1 sm:flex-none" data-testid="sf-copy">
+                {copied ? <Check size={16} /> : <Copy size={16} />} {t('sf.copy')}
+              </Button>
+              <Button onClick={share} className="flex-1 sm:flex-none" data-testid="sf-share">
+                <Share2 size={16} /> {t('sf.share')}
+              </Button>
             </div>
           </div>
         </div>
-        <div className="space-y-5 p-5">
-          <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-line px-4 py-3">
-            <span>
-              <span className="block text-sm font-semibold">{t('sf.enable')}</span>
-              <span className="text-xs text-muted">{t('sf.enableHint')}</span>
-            </span>
-            <input
-              type="checkbox"
-              checked={enabled}
-              onChange={(e) => setEnabled(e.target.checked)}
-              className="h-5 w-5 accent-[var(--brand)]"
-              data-testid="sf-enabled"
-            />
-          </label>
 
-          <Field label={t('sf.slug')}>
-            <div className="flex items-center gap-2">
-              <span className="shrink-0 text-sm text-muted">/b/</span>
-              <Input
-                value={slug}
-                onChange={(e) => setSlug(normalizeStorefrontSlug(e.target.value) || e.target.value.toLowerCase())}
-                placeholder="ma-boutique"
-                data-testid="sf-slug"
-              />
+        <div className="grid gap-0 md:grid-cols-[240px_1fr] md:items-stretch">
+          <div className="flex flex-col items-center justify-center gap-3 border-b border-[#e5d8c8] bg-[#f6efe6] p-6 md:border-b-0 md:border-r">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8a7360]">
+              <QrCode size={14} /> {t('sf.qr')}
             </div>
-          </Field>
-
-          <Field label={t('sf.whatsapp')}>
-            <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+243 81 234 5678" data-testid="sf-whatsapp" />
-          </Field>
-
-          <Field label={t('sf.description')}>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value.slice(0, 280))}
-              rows={3}
-              placeholder={t('sf.descriptionPh')}
-              data-testid="sf-description"
-            />
-            <p className="mt-1 text-right text-[11px] text-muted">{description.length}/280</p>
-          </Field>
-
-          <Button onClick={save} loading={busy} className="w-full" data-testid="sf-save">
-            {t('common.save')}
-          </Button>
-        </div>
-      </Card>
-
-      <Card className="p-5">
-        <SectionTitle>{t('sf.link')}</SectionTitle>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-2xl border border-line bg-surface-2 px-3 py-2.5">
-            <Link2 size={16} className="shrink-0 text-muted" />
-            <a href={publicUrl || '#'} className="truncate text-sm font-semibold text-brand" data-testid="sf-url">
-              {publicUrl || '—'}
-            </a>
+            {qrSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={qrSrc} alt={t('sf.qr')} width={200} height={200} className="border border-[#eadfce] bg-white p-3" data-testid="sf-qr" />
+            ) : (
+              <div className="flex h-[200px] w-[200px] items-center justify-center border border-dashed border-line text-xs text-muted">QR</div>
+            )}
           </div>
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={copyLink} className="flex-1 sm:flex-none" data-testid="sf-copy">
-              {copied ? <Check size={16} /> : <Copy size={16} />} {t('sf.copy')}
-            </Button>
-            <Button variant="secondary" onClick={share} className="flex-1 sm:flex-none" data-testid="sf-share">
-              <Share2 size={16} /> {t('sf.share')}
-            </Button>
+          <div className="flex flex-col justify-center gap-3 p-6 sm:p-7">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8a7360]">Au comptoir</p>
+            <p className="font-[family-name:var(--font-fraunces)] text-xl font-bold leading-snug text-ink sm:text-2xl">
+              Imprimez le QR ou montrez-le sur votre téléphone.
+            </p>
+            <p className="text-sm text-muted">Le client ouvre le catalogue, ajoute des articles, et vous envoie la commande sur WhatsApp.</p>
+            {enabled && isValidStorefrontSlug(normalizeStorefrontSlug(slug)) && (
+              <a
+                href={`/b/${normalizeStorefrontSlug(slug)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-flex text-sm font-bold text-brand"
+              >
+                {t('sf.openPreview')} →
+              </a>
+            )}
           </div>
         </div>
-        <div className="mt-5 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-line bg-surface-2/60 p-5">
-          <div className="flex items-center gap-2 text-sm font-semibold text-muted">
-            <QrCode size={16} /> {t('sf.qr')}
-          </div>
-          {qrSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={qrSrc} alt={t('sf.qr')} width={180} height={180} className="rounded-xl bg-white p-2 shadow-sm" data-testid="sf-qr" />
-          ) : (
-            <div className="flex h-[180px] w-[180px] items-center justify-center rounded-xl bg-white text-xs text-muted">QR</div>
-          )}
-          <p className="text-center text-xs text-muted">{t('sf.qrHint')}</p>
-        </div>
-        {enabled && isValidStorefrontSlug(normalizeStorefrontSlug(slug)) && (
-          <a
-            href={`/b/${normalizeStorefrontSlug(slug)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex text-sm font-semibold text-brand"
-          >
-            {t('sf.openPreview')} →
-          </a>
-        )}
-      </Card>
+      </section>
 
-      <Card className="p-5">
+      <section className="border border-line bg-surface p-5">
         <SectionTitle>{t('sf.products')}</SectionTitle>
-        <p className="mb-3 text-sm text-muted">{t('sf.productsHint')}</p>
+        <p className="mb-4 text-sm text-muted">{t('sf.productsHint')}</p>
         <ul className="divide-y divide-line" data-testid="sf-products">
-          {(products ?? []).map((p) => {
-            const hidden = !!p.storefront_hidden;
-            return (
-              <li key={p.id} className="flex items-center gap-3 py-2.5">
-                <ProductThumb src={p.photo} name={p.name} size={42} />
-                <span className="min-w-0 flex-1">
-                  <span className={clsx('block truncate text-sm font-semibold', hidden && 'text-muted')}>{p.name}</span>
-                  <span className="text-xs text-muted">{hidden ? t('sf.hidden') : t('sf.visible')}</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => toggleHidden(p.id, !hidden)}
-                  className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-line px-3 text-xs font-semibold"
-                  data-testid={`sf-hide-${p.id}`}
-                >
-                  {hidden ? <Eye size={14} /> : <EyeOff size={14} />}
-                  {hidden ? t('sf.show') : t('sf.hide')}
-                </button>
-              </li>
-            );
-          })}
+          <AnimatePresence initial={false}>
+            {(products ?? []).map((p) => {
+              const hidden = !!p.storefront_hidden;
+              return (
+                <motion.li layout key={p.id} className="flex items-center gap-3 py-3">
+                  <ProductArt src={p.photo} name={p.name} category={p.category} className="h-12 w-12 shrink-0" rounded="rounded-xl" />
+                  <span className="min-w-0 flex-1">
+                    <span className={clsx('block truncate text-sm font-semibold', hidden && 'text-muted')}>{p.name}</span>
+                    <span className="text-xs text-muted">{hidden ? t('sf.hidden') : t('sf.visible')}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => toggleHidden(p.id, !hidden)}
+                    className="inline-flex h-10 items-center gap-1.5 border border-line px-3 text-xs font-semibold"
+                    data-testid={`sf-hide-${p.id}`}
+                  >
+                    {hidden ? <Eye size={14} /> : <EyeOff size={14} />}
+                    {hidden ? t('sf.show') : t('sf.hide')}
+                  </button>
+                </motion.li>
+              );
+            })}
+          </AnimatePresence>
         </ul>
-      </Card>
+      </section>
 
       <p className="text-center text-xs text-muted">
         <a href="/b/demo" className="font-semibold text-brand" target="_blank" rel="noopener noreferrer">

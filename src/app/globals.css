@@ -153,3 +153,33 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .skeleton { position: relative; overflow: hidden; background: var(--surface-2); }
 .skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgb(255 255 255 / .35), transparent); animation: shimmer 1.4s infinite; }
 .dark .skeleton::after { background: linear-gradient(90deg, transparent, rgb(255 255 255 / .06), transparent); }
+
+/* Flat surface (no shadow) — new storefront / forecast / reorder panels */
+.card-flat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0;
+}
+
+/* Public storefront color stack: paper base → cocoa structure → terracotta accent */
+.sf-root {
+  --sf-base: #f6efe6;
+  --sf-paper: #fffaf3;
+  --sf-ink: #1c120c;
+  --sf-muted: #7a6554;
+  --sf-line: #e5d8c8;
+  --sf-accent: #c2531f;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgb(194 83 31 / 0.09), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgb(212 160 23 / 0.07), transparent 45%),
+    var(--sf-base);
+  color: var(--sf-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-root * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

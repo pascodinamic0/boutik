@@ -108,11 +108,16 @@ export function Dashboard() {
       {isOwner && (
         <AppLink
           href="/app/boutique"
-          className="flex items-center gap-3 rounded-2xl border border-brand/25 bg-brand-soft/60 px-4 py-3 text-sm font-semibold text-brand"
+          className="flex items-center gap-3 border border-brand/30 bg-brand-soft px-4 py-3.5 text-sm font-semibold text-brand"
           data-testid="dash-storefront"
         >
-          <Store size={18} />
-          <span className="flex-1">{t('dash.storefrontCta')}</span>
+          <span className="flex h-10 w-10 items-center justify-center border border-brand/20 bg-surface text-brand">
+            <Store size={18} />
+          </span>
+          <span className="flex-1">
+            <span className="block font-bold">{t('dash.storefrontCta')}</span>
+            <span className="block text-xs font-medium text-brand/70">Lien, QR et WhatsApp</span>
+          </span>
           <ChevronRight size={16} />
         </AppLink>
       )}
@@ -129,20 +134,28 @@ export function Dashboard() {
           )}
         </Card>
 
-        <Card className="p-5" data-testid="reorder-card">
-          <SectionTitle action={<AppLink href="/app/stock?filtre=bas" className="text-sm font-semibold text-brand">{t('common.seeAll')}</AppLink>}>
-            <span className="inline-flex items-center gap-2">
-              <AlertTriangle size={16} className="text-danger" /> {t('dash.reorder')}
-            </span>
-          </SectionTitle>
+        <section className="border border-line bg-surface p-5" data-testid="reorder-card">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+                <AlertTriangle size={14} className="text-danger" /> {t('dash.reorder')}
+              </p>
+              <p className="mt-1 font-[family-name:var(--font-fraunces)] text-4xl font-bold leading-none tabular text-ink">
+                {reorder.length}
+              </p>
+            </div>
+            <AppLink href="/app/stock?filtre=bas" className="text-sm font-bold text-brand">
+              {t('common.seeAll')}
+            </AppLink>
+          </div>
           {reorder.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted">{t('dash.reorderEmpty')}</p>
           ) : (
             <ul className="divide-y divide-line" data-testid="low-stock-list">
               {reorder.slice(0, 5).map((r) => (
                 <li key={r.product.id}>
-                  <AppLink href={`/app/stock/${r.product.id}`} className="flex items-center gap-3 py-2.5">
-                    <ProductThumb src={r.product.photo} name={r.product.name} size={42} />
+                  <AppLink href={`/app/stock/${r.product.id}`} className="flex items-center gap-3 py-3">
+                    <ProductThumb src={r.product.photo} name={r.product.name} size={52} className="!rounded-xl" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold">{r.product.name}</span>
                       <span className="text-xs text-muted">
@@ -151,15 +164,18 @@ export function Dashboard() {
                         {t('stock.lowThreshold')} {r.product.low_stock}
                       </span>
                     </span>
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${r.product.quantity <= 0 ? 'bg-danger text-white' : 'bg-danger-soft text-danger'}`}>
-                      {r.product.quantity} {r.product.unit}
+                    <span className="text-right">
+                      <span className={`block font-[family-name:var(--font-fraunces)] text-2xl font-bold tabular leading-none ${r.product.quantity <= 0 ? 'text-danger' : 'text-ink'}`}>
+                        {r.product.quantity}
+                      </span>
+                      <span className="text-[11px] font-medium text-muted">{r.product.unit}</span>
                     </span>
                   </AppLink>
                 </li>
               ))}
             </ul>
           )}
-        </Card>
+        </section>
       </div>
 
       {isOwner && <ForecastPanel compact />}

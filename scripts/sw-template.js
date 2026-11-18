@@ -4,7 +4,8 @@ const VERSION = '__VERSION__';
 const SHELL = `boutik-shell-${VERSION}`;
 const STATIC = 'boutik-static-v1'; // content-hashed / immutable assets, kept across versions
 const RUNTIME = `boutik-runtime-${VERSION}`;
-const PAGES = ['/app', '/', '/connexion', '/confidentialite', '/conditions'];
+const STOREFRONT = 'boutik-storefront-v1'; // last-viewed public catalogues (isolated from app shell)
+const PAGES = ['/app', '/', '/connexion', '/confidentialite', '/conditions', '/b/demo'];
 const PRECACHE = __PRECACHE__;
 
 const ASSET_RE = /\/_next\/static\/[^"'\s\\)<>]+/g;
@@ -59,7 +60,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      const keep = [SHELL, STATIC, RUNTIME];
+      const keep = [SHELL, STATIC, RUNTIME, STOREFRONT];
       for (const k of await caches.keys()) if (!keep.includes(k)) await caches.delete(k);
       if (self.registration.navigationPreload) await self.registration.navigationPreload.enable().catch(() => {});
       await self.clients.claim();
@@ -72,6 +73,19 @@ self.addEventListener('message', (event) => {
   if (d.type === 'CACHE_URLS' && Array.isArray(d.urls)) {
     event.waitUntil(caches.open(STATIC).then((c) => cacheAll(c, d.urls.filter((u) => typeof u === 'string' && u.startsWith('/')))));
   }
+  if (d.type === 'CACHE_STOREFRONT' && Array.isArray(d.urls)) {
+    event.waitUntil(
+      (async () => {
+        const sf = await caches.open(STOREFRONT);
+        await cacheAll(sf, d.urls.filter((u) => typeof u === 'string' && u.startsWith('/')));
+        const st = await caches.open(STATIC);
+        await cacheAll(
+          st,
+          d.urls.filter((u) => typeof u === 'string' && /^\/(products|img|icons)\//.test(u)),
+        );
+      })(),
+    );
+  }
   if (d.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
@@ -80,7 +94,8 @@ function timeout(ms) {
 }
 
 async function handleNavigation(event, url) {
-  const shell = await caches.open(SHELL);
+  const isStorefront = url.pathname.startsWith('/b/');
+  const shell = await caches.open(isStorefront ? STOREFRONT : SHELL);
   const key = url.pathname.replace(/\/+$/, '') || '/';
   try {
     const preload = event.preloadResponse ? await event.preloadResponse : null;
@@ -88,11 +103,15 @@ async function handleNavigation(event, url) {
     if (res && res.ok && res.type === 'basic') {
       const copy = res.clone();
       event.waitUntil(shell.put(key, copy));
-      if (key.startsWith('/app')) event.waitUntil(shell.put('/app', res.clone()));
+      if (key.startsWith('/app')) event.waitUntil(caches.open(SHELL).then((c) => c.put('/app', res.clone())));
     }
     return res;
   } catch (e) {
-    const hit = (await shell.match(key)) || (key.startsWith('/app') ? await shell.match('/app') : null) || (await shell.match('/'));
+    const hit =
+      (await shell.match(key)) ||
+      (key.startsWith('/app') ? await caches.open(SHELL).then((c) => c.match('/app')) : null) ||
+      (isStorefront ? await shell.match('/b/demo') : null) ||
+      (await caches.open(SHELL).then((c) => c.match('/')));
     if (hit) return hit;
     return new Response(
       '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boutik</title><body style="font-family:system-ui;background:#faf6f0;color:#24170f;display:grid;place-items:center;min-height:100vh;margin:0;text-align:center"><div><h1>Hors ligne</h1><p>Connectez-vous une première fois à internet pour installer Boutik.</p></div>',
@@ -132,7 +151,14 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith('/api/') || url.pathname === '/sw.js') return;
+  if (url.pathname === '/sw.js') return;
+
+  // Public storefront API: network-first, cached for offline catalogue
+  if (url.pathname.startsWith('/api/storefront/')) {
+    event.respondWith(networkFirst(req, STOREFRONT));
+    return;
+  }
+  if (url.pathname.startsWith('/api/')) return;
 
   if (req.mode === 'navigate') {
     event.respondWith(handleNavigation(event, url));
@@ -145,7 +171,11 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(cacheFirst(req, STATIC));
     return;
   }
-  if (/^\/(products|img|icons|splash)\//.test(url.pathname) || /\.(png|svg|webp|jpg|jpeg|ico|woff2?)$/.test(url.pathname)) {
+  if (
+    url.pathname.includes('/manifest.webmanifest') ||
+    /^\/(products|img|icons|splash)\//.test(url.pathname) ||
+    /\.(png|svg|webp|jpg|jpeg|ico|woff2?)$/.test(url.pathname)
+  ) {
     event.respondWith(cacheFirst(req, STATIC));
     return;
   }

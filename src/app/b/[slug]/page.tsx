@@ -25,13 +25,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: shop.name,
     description,
+    applicationName: shop.name,
+    manifest: `/b/${shop.slug}/manifest.webmanifest`,
+    appleWebApp: {
+      capable: true,
+      title: shop.name,
+      statusBarStyle: 'default',
+    },
+    icons: {
+      apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+      icon: [
+        { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      ],
+    },
+    other: {
+      'mobile-web-app-capable': 'yes',
+      'apple-mobile-web-app-capable': 'yes',
+      'apple-mobile-web-app-title': shop.name,
+    },
     openGraph: {
       title: `${shop.name} — Boutique en ligne`,
       description,
       url: `${site}/b/${shop.slug}`,
       locale: 'fr_CD',
       type: 'website',
-      images: [{ url: '/img/boutique.webp', width: 1200, height: 800, alt: shop.name }],
+      images: [{ url: shop.products.find((p) => p.photo)?.photo || '/img/boutique.webp', width: 1200, height: 800, alt: shop.name }],
     },
     twitter: {
       card: 'summary_large_image',
@@ -70,9 +89,9 @@ export default async function PublicStorefrontPage({ params }: Props) {
 
   return (
     <>
+      <meta name="theme-color" content="#c2531f" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <StorefrontView shop={shop} />
-      {/* SSR hint for crawlers / link previews */}
       <noscript>
         <ul>
           {shop.products.map((p) => (
