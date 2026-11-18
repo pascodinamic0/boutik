@@ -212,6 +212,33 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
   color: #111;
 }
 
+/* Consent strip clearance — keep first-viewport chrome above the bar */
+html[data-sf-consent='1'] {
+  --sf-consent-h: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+}
+html[data-sf-consent='1'] .sf-root {
+  padding-bottom: var(--sf-consent-h);
+}
+html[data-sf-consent='1'] .sf-hero-price {
+  bottom: calc(0.5rem + var(--sf-consent-h)) !important;
+}
+html[data-sf-consent='1'] .sf-first-screen {
+  padding-bottom: var(--sf-consent-h);
+}
+html[data-sf-consent='1'] .sf-stage-consent {
+  padding-bottom: var(--sf-consent-h);
+}
+/* Cinéma desktop: first screen (hero + chips) ends above the consent strip */
+@media (min-width: 1024px) {
+  html[data-sf-consent='1'] .sf-cinema-first {
+    max-height: calc(100dvh - var(--sf-header-h, 56px) - var(--sf-consent-h));
+    padding-bottom: 0;
+  }
+  .sf-cinema-first {
+    min-height: calc(100dvh - var(--sf-header-h, 56px) - var(--sf-consent-h, 0px));
+  }
+}
+
 /* Atelier desktop hero — plain CSS grid (no fragile Tailwind min()) */
 .sf-atelier-hero {
   display: grid;
@@ -229,7 +256,11 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
   .sf-atelier-hero-media { aspect-ratio: 5 / 6; min-height: 360px; }
 }
 @media (min-width: 1024px) {
-  .sf-atelier-hero { grid-template-columns: 1.05fr 0.95fr; min-height: min(100dvh, 820px); }
+  .sf-atelier-hero {
+    grid-template-columns: 1.05fr 0.95fr;
+    /* End above the consent strip so category rail isn't trapped under it */
+    min-height: min(calc(100dvh - var(--sf-header-h, 52px) - var(--sf-consent-h, 0px) - 8px), 700px);
+  }
   .sf-atelier-hero-media {
     aspect-ratio: auto;
     min-height: 100%;

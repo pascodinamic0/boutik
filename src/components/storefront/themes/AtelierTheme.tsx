@@ -71,8 +71,8 @@ export function AtelierTheme({ shop }: { shop: PublicStorefront }) {
         </header>
 
         {/* First screen: XXL photo + quiet copy */}
-        <section className="sf-atelier-hero border-b border-black/8">
-          <div className="sf-atelier-hero-media relative" data-testid="sf-stage">
+        <section className="sf-atelier-hero sf-first-screen border-b border-black/8">
+          <div className="sf-atelier-hero-media sf-stage-consent relative" data-testid="sf-stage">
             {hero && (
               <>
                 <ProductArt
@@ -86,7 +86,7 @@ export function AtelierTheme({ shop }: { shop: PublicStorefront }) {
                 <button
                   type="button"
                   onClick={() => openProduct(hero)}
-                  className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3 border border-white/40 bg-white/90 px-4 py-3 text-left backdrop-blur-sm sm:left-6 sm:right-auto sm:min-w-[260px]"
+                  className="sf-hero-price absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3 border border-white/40 bg-white px-4 py-3 text-left sm:left-6 sm:right-auto sm:min-w-[260px]"
                 >
                   <div className="min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777]">{hero.category}</p>

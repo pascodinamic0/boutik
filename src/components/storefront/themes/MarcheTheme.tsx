@@ -1,5 +1,4 @@
 'use client';
-import clsx from 'clsx';
 import { motion } from 'motion/react';
 import { MapPin, MessageCircle, Plus, Search, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -72,10 +71,10 @@ export function MarcheTheme({ shop }: { shop: PublicStorefront }) {
           </div>
         </header>
 
-        {/* First screen: loud identity + mosaic */}
-        <section className="border-b border-[#1a1208]/10">
-          <div className="mx-auto max-w-6xl px-4 pb-5 pt-5 sm:px-6 sm:pt-8 lg:grid lg:grid-cols-2 lg:gap-8 lg:px-8 lg:pb-8 lg:pt-10">
-            <div>
+        {/* First screen: loud identity + balanced 2×2 mosaic */}
+        <section className="sf-first-screen border-b border-[#1a1208]/10">
+          <div className="mx-auto max-w-6xl px-4 pb-5 pt-5 sm:px-6 sm:pt-8 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:px-8 lg:pb-8 lg:pt-10">
+            <div className="flex flex-col">
               {shop.demo && (
                 <p className="mb-3 inline-flex rounded-lg border border-[#ea580c]/30 bg-[#ffedd5] px-2.5 py-1 text-[11px] font-extrabold text-[#9a3412]" data-testid="demo-banner">
                   Boutique de démonstration
@@ -122,23 +121,22 @@ export function MarcheTheme({ shop }: { shop: PublicStorefront }) {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-2 sm:gap-3 lg:mt-0" data-testid="sf-stage">
+            <div
+              className="mt-6 grid grid-cols-2 grid-rows-2 gap-2 sm:gap-3 lg:mt-0 lg:aspect-square lg:max-h-[min(100%,28rem)] lg:w-full"
+              data-testid="sf-stage"
+            >
               {(mosaic.length ? mosaic : hero ? [hero] : []).slice(0, 4).map((p, i) => (
                 <button
                   key={p.id}
                   type="button"
                   onClick={() => openProduct(p)}
-                  className={clsx(
-                    'relative overflow-hidden rounded-2xl border border-[#1a1208]/10 bg-white text-left',
-                    i === 0 && 'col-span-2 aspect-[16/9] sm:aspect-[2/1] lg:col-span-1 lg:row-span-2 lg:aspect-auto lg:min-h-[280px]',
-                    i > 0 && 'aspect-square',
-                  )}
+                  className="relative min-h-0 overflow-hidden rounded-2xl border border-[#1a1208]/10 bg-white text-left aspect-square lg:aspect-auto"
                 >
-                  <ProductArt src={p.photo} name={p.name} category={p.category} rounded="rounded-none" className="h-full w-full" priority={i < 2} />
-                  <div className="absolute inset-x-0 bottom-0 bg-[#1a1208]/80 p-2.5 text-white">
+                  <ProductArt src={p.photo} name={p.name} category={p.category} rounded="rounded-none" className="absolute inset-0 h-full w-full" priority={i < 2} />
+                  <div className="absolute inset-x-0 bottom-0 bg-[#1a1208]/85 p-2 sm:p-2.5 text-white">
                     <StockBadge availability={p.availability} />
-                    <p className="mt-1 truncate text-[12px] font-bold">{p.name}</p>
-                    <p className="text-[1.15rem] font-black tabular leading-none text-[#fdba74]">{formatMoney(p.sell_price, shop.currency)}</p>
+                    <p className="mt-1 truncate text-[11px] font-bold sm:text-[12px]">{p.name}</p>
+                    <p className="text-[1.05rem] font-black tabular leading-none text-[#fdba74] sm:text-[1.15rem]">{formatMoney(p.sell_price, shop.currency)}</p>
                   </div>
                 </button>
               ))}

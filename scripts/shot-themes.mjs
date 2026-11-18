@@ -60,14 +60,33 @@ async function verifyViewport(page, theme, width) {
           : false;
       const consentAtTop = consent ? consent.getBoundingClientRect().top < 80 : false;
       const headerShop = document.querySelector('[data-testid="sf-header-shop"]');
-      const consentCoversHeader =
-        consent && headerShop
-          ? (() => {
-              const a = consent.getBoundingClientRect();
-              const b = headerShop.getBoundingClientRect();
-              return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
-            })()
-          : false;
+      const overlaps = (aEl, bEl) => {
+        if (!aEl || !bEl) return false;
+        const a = aEl.getBoundingClientRect();
+        const b = bEl.getBoundingClientRect();
+        return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+      };
+      const consentCoversHeader = overlaps(consent, headerShop);
+      const heroPrice = document.querySelector('.sf-hero-price');
+      const consentCoversHeroPrice = (() => {
+        if (!consent || !heroPrice || !inView(heroPrice)) return false;
+        const a = consent.getBoundingClientRect();
+        const b = heroPrice.getBoundingClientRect();
+        // Fail only if the price card meaningfully intersects the strip
+        return b.bottom > a.top + 2 && b.top < a.top;
+      })();
+      const catRail = document.querySelector('[data-testid="sf-category-rail"]');
+      const firstChip = catRail?.querySelector('button');
+      const consentCoversCategory = (() => {
+        if (!consent || !firstChip || !inView(firstChip)) return false;
+        const a = consent.getBoundingClientRect();
+        const b = firstChip.getBoundingClientRect();
+        // Ignore chips that only peek under the strip; fail if readable chip is clipped
+        const visibleAbove = Math.min(b.bottom, a.top) - b.top;
+        return visibleAbove > 12 && b.bottom > a.top + 2;
+      })();
+      const mosaicTiles = stage ? stage.querySelectorAll('button') : [];
+      const mosaicBalanced = theme !== 'marche' || width < 1024 || mosaicTiles.length === 0 || mosaicTiles.length === 4;
 
       const firstGrid = document.querySelector('[data-testid="storefront-grid"] [data-testid^="sf-product-"]');
       const firstRail = document.querySelector('[data-testid^="sf-rail-product-"]');
@@ -96,6 +115,9 @@ async function verifyViewport(page, theme, width) {
         consentCoversCta,
         consentAtTop,
         consentCoversHeader,
+        consentCoversHeroPrice,
+        consentCoversCategory,
+        mosaicBalanced,
         firstProductVisible,
         hasName: !!nameEl,
         hasGrid: !!document.querySelector('[data-testid="storefront-grid"]'),
@@ -109,7 +131,7 @@ async function verifyViewport(page, theme, width) {
   );
 }
 
-async function shotTheme(theme, width, height, { keepConsent = false, fullPage = false, nameOverride } = {}) {
+async function shotTheme(theme, width, height, { keepConsent = false, fullPage = false, nameOverride, scrollHero = false } = {}) {
   const browser = await chromium.launch();
   const context = await browser.newContext({
     viewport: { width, height },
@@ -137,6 +159,27 @@ async function shotTheme(theme, width, height, { keepConsent = false, fullPage =
     });
     return imgs.length === 0 || imgs.every((img) => img.complete && img.naturalWidth > 0);
   }, null, { timeout: 20000 }).catch(() => {});
+
+  if (scrollHero) {
+    const stage = page.getByTestId('sf-stage');
+    if (await stage.count()) {
+      await stage.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(400);
+      // Keep hero price fully above the fixed consent strip
+      await page.evaluate(() => {
+        const price = document.querySelector('.sf-hero-price');
+        const consent = document.querySelector('[data-testid="consent-banner"]');
+        if (!price) return;
+        price.scrollIntoView({ block: 'center', inline: 'nearest' });
+        if (!consent) return;
+        const gap = 10;
+        const cTop = consent.getBoundingClientRect().top;
+        const pBottom = price.getBoundingClientRect().bottom;
+        if (pBottom > cTop - gap) window.scrollBy(0, pBottom - (cTop - gap));
+      });
+      await page.waitForTimeout(300);
+    }
+  }
 
   const check = await verifyViewport(page, theme, width);
   const defaultFont = isBrowserDefaultFont(check.bodyFont) || isBrowserDefaultFont(check.rootFont);
@@ -187,7 +230,26 @@ for (const theme of THEMES) {
     results.push(await shotTheme(theme, w, h, { fullPage: true }));
   }
 }
-results.push(await shotTheme('cinema', 390, 844, { keepConsent: true, nameOverride: 'storefront-consent-check-390.png' }).then((r) => ({ ...r, consentCheck: true })));
+results.push(
+  await shotTheme('cinema', 390, 844, {
+    keepConsent: true,
+    scrollHero: true,
+    nameOverride: 'storefront-consent-check-390.png',
+  }).then((r) => ({ ...r, consentCheck: true })),
+);
+results.push(
+  await shotTheme('cinema', 1440, 900, {
+    keepConsent: true,
+    nameOverride: 'storefront-consent-check-cinema-1440.png',
+  }).then((r) => ({ ...r, consentCheck: true })),
+);
+results.push(
+  await shotTheme('atelier', 1440, 900, {
+    keepConsent: true,
+    nameOverride: 'storefront-consent-check-atelier-1440.png',
+  }).then((r) => ({ ...r, consentCheck: true })),
+);
+results.push(await shotTheme('marche', 1440, 900, { keepConsent: false, nameOverride: 'storefront-marche-mosaic-1440.png' }));
 results.push(await shotOwnerPicker());
 
 for (const w of [390, 820, 1440]) {
@@ -201,7 +263,14 @@ console.log(JSON.stringify(results, null, 2));
 
 const failures = results.filter((r) => {
   if (r.consentCheck) {
-    return r.consentCoversCta || r.consentAtTop || r.consentCoversHeader || r.defaultFont;
+    return (
+      r.consentCoversCta ||
+      r.consentAtTop ||
+      r.consentCoversHeader ||
+      r.consentCoversHeroPrice ||
+      r.consentCoversCategory ||
+      r.defaultFont
+    );
   }
   if ('broken' in r) {
     if (r.fullPage) {

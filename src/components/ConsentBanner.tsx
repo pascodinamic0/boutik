@@ -13,10 +13,22 @@ export function ConsentBanner() {
   const [inApp, setInApp] = useState(false);
   const [onStorefront, setOnStorefront] = useState(false);
   useEffect(() => {
-    setShow(!localStorage.getItem(CONSENT_KEY));
+    const visible = !localStorage.getItem(CONSENT_KEY);
+    setShow(visible);
     setInApp(location.pathname.startsWith('/app'));
     setOnStorefront(location.pathname.startsWith('/b/'));
   }, []);
+
+  useEffect(() => {
+    if (!onStorefront) {
+      document.documentElement.removeAttribute('data-sf-consent');
+      return;
+    }
+    if (show) document.documentElement.setAttribute('data-sf-consent', '1');
+    else document.documentElement.removeAttribute('data-sf-consent');
+    return () => document.documentElement.removeAttribute('data-sf-consent');
+  }, [show, onStorefront]);
+
   const accept = () => {
     localStorage.setItem(CONSENT_KEY, new Date().toISOString());
     setShow(false);
@@ -29,14 +41,14 @@ export function ConsentBanner() {
           initial={{ y: 24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 16, opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 420, damping: 34, delay: 0.35 }}
-          className="no-print pointer-events-none fixed inset-x-0 bottom-0 z-[70] pb-safe"
+          transition={{ type: 'spring', stiffness: 420, damping: 34, delay: 0.25 }}
+          className="no-print pointer-events-none fixed inset-x-0 bottom-0 z-[70]"
           data-testid="consent-banner"
         >
-          {/* Mobile: full-width opaque strip. Desktop: compact bottom-left card. */}
-          <div className="pointer-events-auto sm:mb-4 sm:ml-4 sm:mr-auto sm:w-[min(22rem,calc(100vw-2rem))]">
-            <div className="flex items-center gap-2 border-t border-black/10 bg-white px-3 py-2.5 sm:rounded-2xl sm:border sm:px-3.5 sm:py-3 sm:shadow-[0_12px_40px_rgb(0_0_0/0.14)]">
-              <p className="min-w-0 flex-1 text-[11px] leading-snug text-[#4a382c] sm:text-[12px]">
+          {/* Slim full-width opaque strip on every width — never a floating card */}
+          <div className="pointer-events-auto border-t border-black/10 bg-white pb-safe">
+            <div className="mx-auto flex h-11 max-w-6xl items-center gap-2 px-3 sm:px-6 lg:px-8">
+              <p className="min-w-0 flex-1 truncate text-[11px] leading-none text-[#4a382c] sm:text-[12px]">
                 Stockage local hors ligne.{' '}
                 <Link href="/confidentialite" className="font-semibold text-[#c2531f] underline-offset-2 hover:underline">
                   {t('consent.more')}

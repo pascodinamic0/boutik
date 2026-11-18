@@ -74,12 +74,15 @@ export function CinemaTheme({ shop }: { shop: PublicStorefront }) {
           </div>
         </header>
 
-        {/* First screen: identity + trust + hero product */}
-        <section ref={heroRef} className="relative overflow-hidden">
-          <div className="mx-auto grid max-w-6xl items-stretch gap-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-            <div className="relative z-10 flex flex-col justify-center px-4 pb-8 pt-8 sm:px-6 sm:pt-12 lg:px-8 lg:pb-16 lg:pt-16">
+        {/* First screen: identity + hero + category — height clears consent on desktop */}
+        <section
+          ref={heroRef}
+          className="sf-first-screen sf-cinema-first relative flex flex-col overflow-hidden border-b border-white/10"
+        >
+          <div className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 items-stretch gap-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:min-h-0">
+            <div className="relative z-10 flex flex-col justify-center px-4 pb-6 pt-8 sm:px-6 sm:pt-10 lg:px-8 lg:pb-6 lg:pt-10">
               {shop.demo && (
-                <p className="mb-4 inline-flex w-fit rounded-full border border-[#c9a46a]/35 bg-[#c9a46a]/10 px-3 py-1 text-[11px] font-semibold text-[#e8c98a]" data-testid="demo-banner">
+                <p className="mb-3 inline-flex w-fit rounded-full border border-[#c9a46a]/35 bg-[#c9a46a]/10 px-3 py-1 text-[11px] font-semibold text-[#e8c98a]" data-testid="demo-banner">
                   Boutique de démonstration
                 </p>
               )}
@@ -87,20 +90,20 @@ export function CinemaTheme({ shop }: { shop: PublicStorefront }) {
                 {shop.commune || 'Kinshasa'} · collection
               </p>
               <h1
-                className="mt-3 max-w-[11ch] font-[family-name:var(--font-fraunces)] text-[clamp(2.4rem,8vw,4.75rem)] font-semibold leading-[0.92] tracking-[-0.03em] text-white"
+                className="mt-3 max-w-[11ch] font-[family-name:var(--font-fraunces)] text-[clamp(2.4rem,8vw,4.25rem)] font-semibold leading-[0.92] tracking-[-0.03em] text-white"
                 data-testid="storefront-name"
               >
                 {shop.name}
               </h1>
               {shop.description && (
-                <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/65 sm:text-[16px]">{shop.description}</p>
+                <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/65 sm:mt-4 sm:text-[16px]">{shop.description}</p>
               )}
               <TrustStrip
                 signals={trust}
-                className="mt-5"
+                className="mt-4"
                 chipClassName="border-white/15 bg-white/[0.04] text-white/80"
               />
-              <div className="mt-7 flex flex-wrap gap-3">
+              <div className="mt-5 flex flex-wrap gap-3 sm:mt-6">
                 {shop.whatsapp && (
                   <a
                     href={storefrontContactUrl(shop)}
@@ -115,8 +118,8 @@ export function CinemaTheme({ shop }: { shop: PublicStorefront }) {
                   Voir le rayon
                 </a>
               </div>
-              <div className="mt-8 flex items-end gap-3 border-t border-white/10 pt-5" data-testid="sf-en-rayon">
-                <p className="font-[family-name:var(--font-fraunces)] text-[clamp(2.5rem,5vw,3.5rem)] font-semibold tabular leading-none text-[#e8c98a]">
+              <div className="mt-6 flex items-end gap-3 border-t border-white/10 pt-4 sm:mt-7" data-testid="sf-en-rayon">
+                <p className="font-[family-name:var(--font-fraunces)] text-[clamp(2.25rem,5vw,3.25rem)] font-semibold tabular leading-none text-[#e8c98a]">
                   {shop.products.length}
                 </p>
                 <div className="pb-1">
@@ -126,7 +129,7 @@ export function CinemaTheme({ shop }: { shop: PublicStorefront }) {
               </div>
             </div>
 
-            <div className="relative min-h-[280px] sm:min-h-[360px] lg:min-h-[640px]" data-testid="sf-stage">
+            <div className="sf-stage-consent relative min-h-[240px] sm:min-h-[300px] lg:min-h-0" data-testid="sf-stage">
               {hero && (
                 <motion.div style={reduce ? undefined : { y: heroY, scale: heroScale }} className="absolute inset-0">
                   <ProductArt
@@ -141,7 +144,7 @@ export function CinemaTheme({ shop }: { shop: PublicStorefront }) {
                   <button
                     type="button"
                     onClick={() => openProduct(hero)}
-                    className="absolute bottom-5 left-4 right-4 flex items-end justify-between gap-3 rounded-2xl border border-white/15 bg-[#0c0b0a]/75 p-4 text-left backdrop-blur-md sm:left-6 sm:right-auto sm:min-w-[280px]"
+                    className="sf-hero-price absolute bottom-5 left-4 right-4 flex items-end justify-between gap-3 rounded-2xl border border-white/15 bg-[#0c0b0a]/90 p-4 text-left backdrop-blur-md sm:left-6 sm:right-auto sm:min-w-[280px]"
                   >
                     <div className="min-w-0">
                       <StockBadge availability={hero.availability} />
@@ -156,20 +159,22 @@ export function CinemaTheme({ shop }: { shop: PublicStorefront }) {
               )}
             </div>
           </div>
-        </section>
 
-        <SfSection className="border-t border-white/10 bg-[#10100e] py-2" pad>
-          <CategoryRail
-            cats={cats}
-            total={shop.products.length}
-            cat={cat}
-            setCat={setCat}
-            sticky
-            className="bg-[#10100e]/95 backdrop-blur-md"
-            activeClass="bg-white text-[#0c0b0a]"
-            idleClass="border border-white/12 bg-transparent text-white/75"
-          />
-        </SfSection>
+          <div className="relative z-20 border-t border-white/10 bg-[#10100e]/95 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-6xl">
+              <CategoryRail
+                cats={cats}
+                total={shop.products.length}
+                cat={cat}
+                setCat={setCat}
+                sticky={false}
+                className="bg-transparent"
+                activeClass="bg-white text-[#0c0b0a]"
+                idleClass="border border-white/12 bg-transparent text-white/75"
+              />
+            </div>
+          </div>
+        </section>
 
         <SfSection className="bg-[#10100e] py-8" pad>
           <ProductRail
