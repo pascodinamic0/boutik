@@ -42,6 +42,7 @@ const NAV: NavItem[] = [
   { href: '/app/credit', key: 'nav.credit', icon: BookOpen, match: ['credit', 'customer'] },
   { href: '/app/depenses', key: 'nav.expenses', icon: Wallet, match: ['expenses'], owner: true },
   { href: '/app/rapports', key: 'nav.reports', icon: BarChart3, match: ['reports'], owner: true },
+  { href: '/app/boutique', key: 'nav.storefront', icon: Store, match: ['storefront'], owner: true },
   { href: '/app/reglages', key: 'nav.settings', icon: Settings, match: ['settings'] },
 ];
 

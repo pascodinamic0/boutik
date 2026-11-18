@@ -16,6 +16,11 @@ export interface Shop {
   trial_ends_at: string;
   created_by: string | null;
   created_at: string;
+  /** Vitrine publique */
+  storefront_enabled?: boolean;
+  storefront_slug?: string | null;
+  storefront_whatsapp?: string | null;
+  storefront_description?: string | null;
 }
 
 export interface Member {
@@ -40,6 +45,8 @@ export interface Product {
   low_stock: number;
   photo: string | null;
   archived: boolean;
+  /** Masquer ce produit de la boutique en ligne */
+  storefront_hidden?: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -16,6 +16,7 @@ export function generateStaticParams() {
     { slug: ['credit'] },
     { slug: ['depenses'] },
     { slug: ['rapports'] },
+    { slug: ['boutique'] },
     { slug: ['reglages'] },
     { slug: ['bienvenue'] },
   ];

@@ -17,6 +17,7 @@ import { CreditList } from '@/views/CreditList';
 import { CustomerDetail } from '@/views/CustomerDetail';
 import { Expenses } from '@/views/Expenses';
 import { Reports } from '@/views/Reports';
+import { StorefrontSettings } from '@/views/StorefrontSettings';
 import { SettingsView } from '@/views/Settings';
 import { Onboarding } from '@/views/Onboarding';
 import { NotFoundView } from '@/views/NotFoundView';
@@ -34,7 +35,7 @@ function Routes() {
   if (status !== 'ready' || (!shop && !needsOnboarding && route.name !== 'onboarding')) return <Splash text={t('splash.loading')} />;
   if (route.name === 'onboarding' || !shop) return <Onboarding />;
 
-  const ownerOnly = ['expenses', 'reports'].includes(route.name) && !isOwner;
+  const ownerOnly = ['expenses', 'reports', 'storefront'].includes(route.name) && !isOwner;
   let view: React.ReactNode;
   switch (ownerOnly ? 'home' : route.name) {
     case 'home':
@@ -69,6 +70,9 @@ function Routes() {
       break;
     case 'reports':
       view = <Reports />;
+      break;
+    case 'storefront':
+      view = <StorefrontSettings />;
       break;
     case 'settings':
       view = <SettingsView />;

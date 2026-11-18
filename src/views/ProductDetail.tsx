@@ -1,6 +1,6 @@
 'use client';
 import clsx from 'clsx';
-import { Archive, ArrowDownLeft, ArrowUpRight, PackagePlus, Pencil, SlidersHorizontal } from 'lucide-react';
+import { Archive, ArrowDownLeft, ArrowUpRight, Eye, EyeOff, PackagePlus, Pencil, SlidersHorizontal } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { useActor, useApp } from '@/app-shell/AppContext';
@@ -92,6 +92,18 @@ export function ProductDetail({ id }: { id: string }) {
               </Button>
               <Button variant="secondary" onClick={() => setSheet('edit')} data-testid="edit-product">
                 <Pencil size={17} /> {t('common.edit')}
+              </Button>
+              <Button
+                variant="secondary"
+                className="col-span-2"
+                onClick={async () => {
+                  await updateProduct(actor, p.id, { storefront_hidden: !p.storefront_hidden });
+                  toast(t('common.saved'));
+                }}
+                data-testid="toggle-storefront-hidden"
+              >
+                {p.storefront_hidden ? <Eye size={17} /> : <EyeOff size={17} />}
+                {p.storefront_hidden ? t('stock.showStorefront') : t('stock.hideStorefront')}
               </Button>
               {!p.archived && (
                 <Button
