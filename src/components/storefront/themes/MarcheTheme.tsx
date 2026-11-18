@@ -95,8 +95,8 @@ export function MarcheTheme({ shop }: { shop: PublicStorefront }) {
               </div>
             </div>
 
-            {/* Image-dense market strip */}
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-1 sm:grid-rows-3 sm:gap-2.5">
+            {/* Image-dense market mosaic — stays dense at 820/1440 */}
+            <div className="grid h-full min-h-[220px] grid-cols-2 grid-rows-2 gap-2 sm:min-h-[320px] sm:gap-2.5 lg:min-h-[380px]">
               {featured.map((p, i) => (
                 <button
                   key={p.id}
@@ -104,7 +104,8 @@ export function MarcheTheme({ shop }: { shop: PublicStorefront }) {
                   onClick={() => openProduct(p)}
                   className={clsx(
                     'relative overflow-hidden rounded-xl active:scale-[0.98]',
-                    i === 0 ? 'col-span-2 aspect-[16/11] sm:col-span-1 sm:aspect-auto sm:row-span-2' : 'aspect-square sm:aspect-auto',
+                    i === 0 && 'row-span-2',
+                    i === 2 && featured.length === 3 && 'col-span-1',
                   )}
                 >
                   <ProductArt
