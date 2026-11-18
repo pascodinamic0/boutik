@@ -169,15 +169,47 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
   --sf-muted: #7a6554;
   --sf-line: rgb(10 10 10 / 0.08);
   --sf-accent: #c2531f;
+  /* Critical styles so a delayed CSS chunk never leaves Times New Roman / blue links */
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   background:
     radial-gradient(ellipse 70% 45% at 85% 8%, rgb(194 83 31 / 0.07), transparent 50%),
     radial-gradient(ellipse 50% 35% at 0% 100%, rgb(28 18 12 / 0.04), transparent 45%),
     var(--sf-base);
   color: var(--sf-ink);
 }
+.sf-root a { text-decoration: none; }
+/* Reset default blue links without forcing ink color onto filled CTAs */
+.sf-root a:not([class*='bg-']):not([class*='text-']) { color: inherit; }
 
 .sf-cinematic {
   font-feature-settings: 'ss01' on, 'cv11' on;
+}
+
+/* Atelier desktop hero — plain CSS (no fragile Tailwind arbitrary min()) */
+.sf-atelier-hero {
+  display: grid;
+  max-width: 64rem;
+  margin-inline: auto;
+}
+.sf-atelier-hero-media {
+  position: relative;
+  overflow: hidden;
+  background: #e8e6e2;
+  aspect-ratio: 4 / 5;
+}
+@media (min-width: 640px) {
+  .sf-atelier-hero-media { aspect-ratio: 5 / 6; }
+}
+@media (min-width: 1024px) {
+  .sf-atelier-hero { grid-template-columns: 1fr 1fr; }
+  .sf-atelier-hero-media {
+    aspect-ratio: auto;
+    min-height: 720px;
+  }
+}
+.sf-root[data-theme='atelier'] {
+  background: #f7f6f4;
+  color: #111;
 }
 
 .perspective-\[1200px\] {

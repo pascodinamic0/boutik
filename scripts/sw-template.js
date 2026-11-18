@@ -2,9 +2,9 @@
  * Generated from scripts/sw-template.js at build time (VERSION is injected). */
 const VERSION = '__VERSION__';
 const SHELL = `boutik-shell-${VERSION}`;
-const STATIC = 'boutik-static-v1'; // content-hashed / immutable assets, kept across versions
+const STATIC = `boutik-static-${VERSION}`; // versioned so stale CSS hashes cannot outlive a deploy
 const RUNTIME = `boutik-runtime-${VERSION}`;
-const STOREFRONT = 'boutik-storefront-v1'; // last-viewed public catalogues (isolated from app shell)
+const STOREFRONT = `boutik-storefront-${VERSION}`; // versioned — never serve HTML that points at deleted CSS
 const PAGES = ['/app', '/', '/connexion', '/confidentialite', '/conditions', '/b/demo'];
 const PRECACHE = __PRECACHE__;
 
@@ -96,10 +96,15 @@ function timeout(ms) {
 async function handleNavigation(event, url) {
   const isStorefront = url.pathname.startsWith('/b/');
   const shell = await caches.open(isStorefront ? STOREFRONT : SHELL);
-  const key = url.pathname.replace(/\/+$/, '') || '/';
+  // Include search so /b/demo?theme=atelier is not overwritten by /b/demo (cinema).
+  const key = isStorefront
+    ? `${url.pathname.replace(/\/+$/, '') || '/b'}${url.search}`
+    : url.pathname.replace(/\/+$/, '') || '/';
   try {
     const preload = event.preloadResponse ? await event.preloadResponse : null;
-    const res = preload || (await Promise.race([fetch(event.request), timeout(6000)]));
+    // Prefer a real network response; only race a long timeout so headless/slow
+    // clients never fall back to HTML that references deleted CSS chunks.
+    const res = preload || (await Promise.race([fetch(event.request), timeout(20000)]));
     if (res && res.ok && res.type === 'basic') {
       const copy = res.clone();
       event.waitUntil(shell.put(key, copy));
@@ -109,6 +114,7 @@ async function handleNavigation(event, url) {
   } catch (e) {
     const hit =
       (await shell.match(key)) ||
+      (isStorefront ? await shell.match(url.pathname.replace(/\/+$/, '') || '/b') : null) ||
       (key.startsWith('/app') ? await caches.open(SHELL).then((c) => c.match('/app')) : null) ||
       (isStorefront ? await shell.match('/b/demo') : null) ||
       (await caches.open(SHELL).then((c) => c.match('/')));
@@ -167,6 +173,11 @@ self.addEventListener('fetch', (event) => {
   // RSC payloads: network only (Next falls back to a full navigation when offline)
   if (req.headers.get('RSC') || url.searchParams.has('_rsc')) return;
 
+  // CSS must never 404 after a deploy — network-first so new hashes win.
+  if (url.pathname.startsWith('/_next/static/') && url.pathname.endsWith('.css')) {
+    event.respondWith(networkFirst(req, STATIC));
+    return;
+  }
   if (url.pathname.startsWith('/_next/static/')) {
     event.respondWith(cacheFirst(req, STATIC));
     return;

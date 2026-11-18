@@ -95,27 +95,38 @@ export function MarcheTheme({ shop }: { shop: PublicStorefront }) {
               </div>
             </div>
 
-            {/* Image-dense market mosaic — stays dense at 820/1440 */}
-            <div className="grid h-full min-h-[220px] grid-cols-2 grid-rows-2 gap-2 sm:min-h-[320px] sm:gap-2.5 lg:min-h-[380px]">
-              {featured.map((p, i) => (
+            {/* Balanced mosaic: short featured strip + two equal squares */}
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+              {featured[0] && (
+                <button
+                  type="button"
+                  onClick={() => openProduct(featured[0]!)}
+                  className="relative col-span-2 aspect-[2.6/1] overflow-hidden rounded-xl active:scale-[0.98] sm:aspect-[2.4/1]"
+                >
+                  <ProductArt
+                    src={featured[0].photo}
+                    name={featured[0].name}
+                    category={featured[0].category}
+                    rounded="rounded-none"
+                    className="h-full w-full"
+                    priority
+                  />
+                  <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2.5 pb-2.5 pt-8 text-left">
+                    <span className="line-clamp-1 text-[12px] font-bold text-white">{featured[0].name}</span>
+                    <span className="block text-[13px] font-black tabular text-[#f4a261]">
+                      {formatMoney(featured[0].sell_price, shop.currency)}
+                    </span>
+                  </span>
+                </button>
+              )}
+              {featured.slice(1, 3).map((p) => (
                 <button
                   key={p.id}
                   type="button"
                   onClick={() => openProduct(p)}
-                  className={clsx(
-                    'relative overflow-hidden rounded-xl active:scale-[0.98]',
-                    i === 0 && 'row-span-2',
-                    i === 2 && featured.length === 3 && 'col-span-1',
-                  )}
+                  className="relative aspect-square overflow-hidden rounded-xl active:scale-[0.98]"
                 >
-                  <ProductArt
-                    src={p.photo}
-                    name={p.name}
-                    category={p.category}
-                    rounded="rounded-none"
-                    className="h-full w-full"
-                    priority={i === 0}
-                  />
+                  <ProductArt src={p.photo} name={p.name} category={p.category} rounded="rounded-none" className="h-full w-full" />
                   <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2 pb-2 pt-6 text-left">
                     <span className="line-clamp-1 text-[11px] font-bold text-white sm:text-[12px]">{p.name}</span>
                     <span className="block text-[12px] font-black tabular text-[#f4a261]">

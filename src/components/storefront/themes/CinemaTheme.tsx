@@ -53,33 +53,38 @@ export function CinemaTheme({ shop }: { shop: PublicStorefront }) {
 
         <section ref={heroRef} className="relative">
           <motion.div style={reduce ? undefined : { opacity: heroFade }} className="relative overflow-hidden">
-            <div className="mx-auto grid max-w-6xl items-center gap-6 px-4 pb-6 pt-8 sm:px-6 sm:pt-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.28fr)] lg:gap-4 lg:px-8 lg:pb-8 lg:pt-10">
-              <motion.div style={reduce ? undefined : { y: titleY }} className="relative z-10 order-2 lg:order-1 lg:pr-4">
+            {/* Mobile: copy first (name+CTA in first viewport). Desktop: copy | contained stage */}
+            <div className="mx-auto grid max-w-6xl items-center gap-4 px-4 pb-6 pt-6 sm:gap-6 sm:px-6 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8 lg:overflow-hidden lg:px-8 lg:pb-8 lg:pt-10">
+              <motion.div style={reduce ? undefined : { y: titleY }} className="relative z-10 order-1 min-w-0 lg:pr-2">
                 {shop.demo && (
-                  <p className="mb-4 inline-flex rounded-full border border-[#e0c48a] bg-[#fff6df] px-3 py-1 text-[11px] font-semibold text-[#7a5a12]" data-testid="demo-banner">
+                  <p className="mb-3 inline-flex rounded-full border border-[#e0c48a] bg-[#fff6df] px-3 py-1 text-[11px] font-semibold text-[#7a5a12]" data-testid="demo-banner">
                     Boutique de démonstration
                   </p>
                 )}
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8a7360]">{shop.commune || 'Kinshasa'} · catalogue</p>
                 <h1
-                  className="mt-3 max-w-[12ch] font-[family-name:var(--font-fraunces)] text-[clamp(2.75rem,8.5vw,5.25rem)] font-bold leading-[0.92] tracking-[-0.04em]"
+                  className="mt-2 max-w-[12ch] font-display text-[clamp(2.15rem,7.5vw,4.75rem)] font-bold leading-[0.92] tracking-[-0.04em]"
                   data-testid="storefront-name"
                 >
                   {shop.name}
                 </h1>
-                {shop.description && <p className="mt-5 max-w-md text-[15px] leading-relaxed text-[#4a382c] sm:text-[16px]">{shop.description}</p>}
-                <div className="mt-7 flex flex-wrap gap-2.5">
+                {shop.description && (
+                  <p className="mt-3 line-clamp-3 max-w-md text-[14px] leading-relaxed text-[#4a382c] sm:mt-5 sm:line-clamp-none sm:text-[16px]">
+                    {shop.description}
+                  </p>
+                )}
+                <div className="mt-5 flex flex-wrap gap-2.5 sm:mt-7">
                   {shop.whatsapp && (
-                    <a href={storefrontContactUrl(shop)} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center rounded-full bg-[#0a0a0a] px-6 text-sm font-bold text-white">
+                    <a href={storefrontContactUrl(shop)} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center rounded-full bg-[#0a0a0a] px-5 text-sm font-bold !text-white sm:h-12 sm:px-6">
                       Commander →
                     </a>
                   )}
-                  <a href="#catalogue" className="inline-flex h-12 items-center rounded-full border border-[#0a0a0a]/15 px-5 text-sm font-semibold">
+                  <a href="#catalogue" className="inline-flex h-11 items-center rounded-full border border-[#0a0a0a]/15 px-4 text-sm font-semibold sm:h-12 sm:px-5">
                     Voir le rayon
                   </a>
                 </div>
-                <div className="mt-8 flex items-end gap-3 border-t border-black/[0.06] pt-5 sm:gap-4" data-testid="sf-en-rayon">
-                  <p className="shrink-0 font-[family-name:var(--font-fraunces)] text-[clamp(2.75rem,5vw,3.75rem)] font-bold tabular leading-none text-[#c2531f]">
+                <div className="mt-6 flex items-end gap-3 border-t border-black/[0.06] pt-4 sm:mt-8 sm:gap-4 sm:pt-5" data-testid="sf-en-rayon">
+                  <p className="shrink-0 font-display text-[clamp(2.25rem,5vw,3.75rem)] font-bold tabular leading-none text-[#c2531f]">
                     {shop.products.length}
                   </p>
                   <div className="min-w-0 flex-1 pb-1">
@@ -88,7 +93,7 @@ export function CinemaTheme({ shop }: { shop: PublicStorefront }) {
                   </div>
                 </div>
               </motion.div>
-              <div className="order-1 -mx-2 lg:order-2 lg:mx-0">
+              <div className="order-2 min-w-0 overflow-hidden">
                 <StorefrontStage products={shop.products} currency={shop.currency} />
               </div>
             </div>

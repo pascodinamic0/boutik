@@ -43,10 +43,10 @@ export function AtelierTheme({ shop }: { shop: PublicStorefront }) {
           </div>
         </header>
 
-        {/* Full-bleed photography hero */}
+        {/* Full-bleed photography hero — layout via .sf-atelier-hero (plain CSS) */}
         <section className="relative">
-          <div className="relative mx-auto grid max-w-5xl lg:grid-cols-2">
-            <div className="relative aspect-[4/5] overflow-hidden bg-[#e8e6e2] sm:aspect-[5/6] lg:aspect-auto lg:min-h-[min(88vh,720px)]">
+          <div className="sf-atelier-hero">
+            <div className="sf-atelier-hero-media">
               {hero && (
                 <ProductArt
                   src={hero.photo}
@@ -57,7 +57,7 @@ export function AtelierTheme({ shop }: { shop: PublicStorefront }) {
                   priority
                 />
               )}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-[#f7f6f4]/40" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-[#f7f6f4]/50" />
             </div>
             <div className="flex flex-col justify-center px-5 py-10 sm:px-10 sm:py-14 lg:px-14">
               {shop.demo && (
@@ -69,7 +69,7 @@ export function AtelierTheme({ shop }: { shop: PublicStorefront }) {
                 {shop.commune || 'Kinshasa'}
               </p>
               <h1
-                className="mt-4 max-w-[11ch] font-[family-name:var(--font-fraunces)] text-[clamp(2.6rem,7vw,4.5rem)] font-medium leading-[0.95] tracking-[-0.035em]"
+                className="mt-4 max-w-[11ch] font-display text-[clamp(2.6rem,7vw,4.5rem)] font-semibold leading-[0.95] tracking-[-0.035em]"
                 data-testid="storefront-name"
               >
                 {shop.name}
@@ -83,7 +83,7 @@ export function AtelierTheme({ shop }: { shop: PublicStorefront }) {
                     href={storefrontContactUrl(shop)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex h-12 items-center bg-[#111] px-7 text-[12px] font-medium uppercase tracking-[0.16em] text-white"
+                    className="inline-flex h-12 items-center bg-[#111] px-7 text-[12px] font-medium uppercase tracking-[0.16em] !text-white"
                   >
                     Commander
                   </a>
@@ -96,7 +96,7 @@ export function AtelierTheme({ shop }: { shop: PublicStorefront }) {
                 </a>
               </div>
               <div className="mt-12 border-t border-black/[0.08] pt-6" data-testid="sf-en-rayon">
-                <p className="font-[family-name:var(--font-fraunces)] text-[3.25rem] font-medium tabular leading-none tracking-tight">
+                <p className="font-display text-[3.25rem] font-semibold tabular leading-none tracking-tight">
                   {shop.products.length}
                 </p>
                 <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.2em] text-[#888]">Pièces en collection</p>
@@ -110,7 +110,7 @@ export function AtelierTheme({ shop }: { shop: PublicStorefront }) {
           <div className="mb-8 flex flex-col gap-4 border-b border-black/[0.06] pb-8 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-[#888]">Collection</p>
-              <h2 className="mt-2 font-[family-name:var(--font-fraunces)] text-2xl font-medium tracking-tight sm:text-3xl">
+              <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
                 Sélection du jour
               </h2>
             </div>
@@ -188,11 +188,11 @@ export function AtelierTheme({ shop }: { shop: PublicStorefront }) {
                 <div className={clsx('px-1 sm:px-2', i % 2 === 1 && 'lg:order-1 lg:text-right')}>
                   <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#999]">{p.category || 'Pièce'}</p>
                   <button type="button" onClick={() => openProduct(p)} className="mt-2 text-left lg:text-inherit">
-                    <h3 className="font-[family-name:var(--font-fraunces)] text-[clamp(1.5rem,3.5vw,2.25rem)] font-medium leading-tight tracking-[-0.02em]">
+                    <h3 className="font-display text-[clamp(1.5rem,3.5vw,2.25rem)] font-semibold leading-tight tracking-[-0.02em]">
                       {p.name}
                     </h3>
                   </button>
-                  <p className="mt-4 font-[family-name:var(--font-fraunces)] text-2xl font-medium tabular tracking-tight">
+                  <p className="mt-4 font-display text-2xl font-semibold tabular tracking-tight">
                     {formatMoney(p.sell_price, shop.currency)}
                   </p>
                   <button

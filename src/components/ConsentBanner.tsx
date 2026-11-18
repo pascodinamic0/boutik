@@ -2,9 +2,10 @@
 import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Database, X } from 'lucide-react';
 import { useT } from '@/i18n';
 import { Button } from './ui';
+
+const CONSENT_KEY = 'boutik.consent';
 
 export function ConsentBanner() {
   const t = useT();
@@ -12,12 +13,12 @@ export function ConsentBanner() {
   const [inApp, setInApp] = useState(false);
   const [onStorefront, setOnStorefront] = useState(false);
   useEffect(() => {
-    setShow(!localStorage.getItem('boutik.consent'));
+    setShow(!localStorage.getItem(CONSENT_KEY));
     setInApp(location.pathname.startsWith('/app'));
     setOnStorefront(location.pathname.startsWith('/b/'));
   }, []);
   const accept = () => {
-    localStorage.setItem('boutik.consent', new Date().toISOString());
+    localStorage.setItem(CONSENT_KEY, new Date().toISOString());
     setShow(false);
     window.dispatchEvent(new Event('boutik:consent'));
   };
@@ -25,32 +26,25 @@ export function ConsentBanner() {
     <AnimatePresence>
       {show && onStorefront && (
         <motion.div
-          initial={{ y: 16, opacity: 0, scale: 0.96 }}
-          animate={{ y: 0, opacity: 1, scale: 1 }}
-          exit={{ y: 12, opacity: 0, scale: 0.96 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 32, delay: 0.6 }}
-          className="no-print fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-3 z-[60] w-[min(18.5rem,calc(100vw-1.5rem))] sm:right-5"
+          initial={{ y: -12, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -8, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 420, damping: 34, delay: 0.35 }}
+          className="no-print fixed inset-x-0 top-0 z-[60] pt-safe"
           data-testid="consent-banner"
         >
-          <div className="rounded-2xl border border-black/10 bg-white/95 p-3 backdrop-blur-xl">
-            <div className="flex items-start gap-2">
-              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-[#c2531f]/12 text-[#c2531f]">
-                <Database size={14} />
-              </span>
-              <p className="text-[11.5px] leading-snug text-[#4a382c]">
-                Stockage local hors ligne.{' '}
-                <Link href="/confidentialite" className="font-semibold text-[#c2531f] underline-offset-2 hover:underline">
-                  {t('consent.more')}
-                </Link>
-              </p>
-              <button type="button" onClick={accept} className="shrink-0 rounded-full p-1 text-[#8a7360]" aria-label="Fermer">
-                <X size={14} />
-              </button>
-            </div>
+          {/* Compact opaque top bar — never covers hero CTAs at the bottom */}
+          <div className="mx-auto flex max-w-6xl items-center gap-2 border-b border-black/10 bg-white px-3 py-2 shadow-sm sm:px-4">
+            <p className="min-w-0 flex-1 truncate text-[11px] leading-snug text-[#4a382c] sm:text-[12px]">
+              Stockage local hors ligne.{' '}
+              <Link href="/confidentialite" className="font-semibold text-[#c2531f] underline-offset-2 hover:underline">
+                {t('consent.more')}
+              </Link>
+            </p>
             <button
               type="button"
               onClick={accept}
-              className="mt-2.5 flex h-8 w-full items-center justify-center rounded-full bg-[#0a0a0a] text-[12px] font-bold text-white"
+              className="inline-flex h-8 shrink-0 items-center rounded-full bg-[#0a0a0a] px-3.5 text-[11px] font-bold text-white"
               data-testid="consent-accept"
             >
               {t('consent.accept')}
@@ -70,18 +64,13 @@ export function ConsentBanner() {
           }
           data-testid="consent-banner"
         >
-          <div className="flex flex-col gap-3 rounded-3xl border border-line bg-surface/95 p-4 shadow-pop backdrop-blur-xl sm:flex-row sm:items-center">
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand">
-                <Database size={18} />
-              </span>
-              <p className="text-[13.5px] leading-snug text-ink">
-                {t('consent.text')}{' '}
-                <Link href="/confidentialite" className="font-semibold text-brand underline-offset-2 hover:underline">
-                  {t('consent.more')}
-                </Link>
-              </p>
-            </div>
+          <div className="flex flex-col gap-3 rounded-3xl border border-line bg-surface p-4 sm:flex-row sm:items-center">
+            <p className="text-[13.5px] leading-snug text-ink">
+              {t('consent.text')}{' '}
+              <Link href="/confidentialite" className="font-semibold text-brand underline-offset-2 hover:underline">
+                {t('consent.more')}
+              </Link>
+            </p>
             <Button size="sm" onClick={accept} className="shrink-0 self-end sm:self-auto" data-testid="consent-accept">
               {t('consent.accept')}
             </Button>
