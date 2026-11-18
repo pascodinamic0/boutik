@@ -50,7 +50,7 @@ const PHOTOS: { file: string; url: string }[] = [
   },
   {
     "file": "/products/farine-mais.webp",
-    "url": "https://www.pexels.com/photo/13675717/"
+    "url": "image générée (farine de maïs / fufu)"
   },
   {
     "file": "/products/huile.webp",
@@ -78,7 +78,7 @@ const PHOTOS: { file: string; url: string }[] = [
   },
   {
     "file": "/products/spaghetti.webp",
-    "url": "https://www.pexels.com/photo/546945/"
+    "url": "image générée (spaghetti secs)"
   },
   {
     "file": "/products/soda.webp",
@@ -182,7 +182,7 @@ const list = PHOTOS.map((p) => `${p.file} — ${p.url}`);
 
 const fr: LegalDoc = {
   title: 'Crédits photos',
-  intro: "Les photographies utilisées sur Boutik proviennent de Pexels et sont utilisées conformément à la licence Pexels (utilisation gratuite, attribution non obligatoire). Merci aux photographes !",
+  intro: "La plupart des photographies utilisées sur Boutik proviennent de Pexels (licence Pexels : utilisation gratuite, attribution non obligatoire). Quelques images produits ont été générées pour coller au catalogue. Merci aux photographes !",
   sections: [{ h: 'Photos', p: list }],
 };
 const ln: LegalDoc = {
