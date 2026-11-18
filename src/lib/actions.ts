@@ -311,13 +311,21 @@ export type ShopPatch = Partial<
     | 'storefront_slug'
     | 'storefront_whatsapp'
     | 'storefront_description'
+    | 'storefront_theme'
   >
 >;
 
 export async function updateShop(a: Actor, patch: ShopPatch) {
   const db = getDb();
-  await commit(a.shop.id, 'shop', [{ table: 'shops', kind: 'update', rows: [{ id: a.shop.id, ...patch }] }], async () => {
+  const next = { ...patch };
+  if (next.storefront_theme != null) {
+    const { isStorefrontThemeId, DEFAULT_STOREFRONT_THEME } = await import('@/lib/storefront-themes');
+    if (!isStorefrontThemeId(next.storefront_theme)) {
+      next.storefront_theme = DEFAULT_STOREFRONT_THEME;
+    }
+  }
+  await commit(a.shop.id, 'shop', [{ table: 'shops', kind: 'update', rows: [{ id: a.shop.id, ...next }] }], async () => {
     const s = await db.shops.get(a.shop.id);
-    if (s) await db.shops.put({ ...s, ...patch });
+    if (s) await db.shops.put({ ...s, ...next });
   });
 }

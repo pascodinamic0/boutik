@@ -21,6 +21,8 @@ export interface Shop {
   storefront_slug?: string | null;
   storefront_whatsapp?: string | null;
   storefront_description?: string | null;
+  /** cinema | marche | atelier — see storefront-themes allow-list */
+  storefront_theme?: string | null;
 }
 
 export interface Member {

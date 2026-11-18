@@ -1,7 +1,7 @@
 'use client';
 import clsx from 'clsx';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Check, Copy, Eye, EyeOff, Link2, QrCode, Share2, Store } from 'lucide-react';
+import { Check, Copy, Eye, EyeOff, ExternalLink, Link2, QrCode, Share2, Store } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useActor, useApp } from '@/app-shell/AppContext';
 import { useProducts } from '@/app-shell/data';
@@ -11,6 +11,13 @@ import { Button, Field, Input, Textarea, useToast } from '@/components/ui';
 import { useI18n } from '@/i18n';
 import { updateProduct, updateShop } from '@/lib/actions';
 import { isValidStorefrontSlug, normalizeStorefrontSlug } from '@/lib/storefront';
+import {
+  DEFAULT_STOREFRONT_THEME,
+  isStorefrontThemeId,
+  resolveStorefrontTheme,
+  storefrontThemeList,
+  type StorefrontThemeId,
+} from '@/lib/storefront-themes';
 import { formatDrcPhone, normalizeDrcPhone, waLink } from '@/lib/phone';
 
 function siteOrigin() {
@@ -30,13 +37,21 @@ export function StorefrontSettings() {
   const [slug, setSlug] = useState(shop?.storefront_slug ?? normalizeStorefrontSlug(shop?.name ?? 'boutique'));
   const [whatsapp, setWhatsapp] = useState(shop?.storefront_whatsapp || shop?.phone || '');
   const [description, setDescription] = useState(shop?.storefront_description ?? '');
+  const [theme, setTheme] = useState<StorefrontThemeId>(resolveStorefrontTheme(shop?.storefront_theme));
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const themes = storefrontThemeList();
 
   const publicUrl = useMemo(() => {
     const s = normalizeStorefrontSlug(slug);
     return s ? `${siteOrigin()}/b/${s}` : '';
   }, [slug]);
+
+  const previewUrl = (id: StorefrontThemeId) => {
+    const s = normalizeStorefrontSlug(slug);
+    if (!s) return `/b/demo?theme=${id}`;
+    return `/b/${s}?theme=${id}`;
+  };
 
   const qrSrc = publicUrl
     ? `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=10&color=1c120c&bgcolor=fffaf3&data=${encodeURIComponent(publicUrl)}`
@@ -61,6 +76,7 @@ export function StorefrontSettings() {
       toast(t('sf.whatsappInvalid'), 'danger');
       return;
     }
+    const themeSafe = isStorefrontThemeId(theme) ? theme : DEFAULT_STOREFRONT_THEME;
     setBusy(true);
     try {
       await updateShop(actor, {
@@ -68,8 +84,10 @@ export function StorefrontSettings() {
         storefront_slug: enabled ? normalized : shop?.storefront_slug ?? normalized,
         storefront_whatsapp: whatsapp.trim() ? formatDrcPhone(whatsapp) || whatsapp.trim() : null,
         storefront_description: description.trim().slice(0, 280) || null,
+        storefront_theme: themeSafe,
       });
       setSlug(normalized);
+      setTheme(themeSafe);
       toast(t('common.saved'));
     } catch (e) {
       console.error(e);
@@ -177,6 +195,73 @@ export function StorefrontSettings() {
           />
           <p className="mt-1 text-right text-[11px] text-muted">{description.length}/280</p>
         </Field>
+
+        <div data-testid="sf-theme-picker">
+          <p className="mb-1 text-sm font-semibold text-ink">{t('sf.theme')}</p>
+          <p className="mb-4 text-xs text-muted">{t('sf.themeHint')}</p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {themes.map((th) => {
+              const selected = theme === th.id;
+              return (
+                <div
+                  key={th.id}
+                  className={clsx(
+                    'overflow-hidden border transition-colors',
+                    selected ? 'border-[#c2531f] ring-2 ring-[#c2531f]/25' : 'border-line',
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setTheme(th.id)}
+                    className="w-full text-left"
+                    data-testid={`sf-theme-${th.id}`}
+                    aria-pressed={selected}
+                  >
+                    <div
+                      className="relative h-24"
+                      style={{
+                        background:
+                          th.id === 'cinema'
+                            ? 'linear-gradient(135deg,#faf8f4 0%,#efe6da 40%,#c2531f 100%)'
+                            : th.id === 'marche'
+                              ? 'linear-gradient(135deg,#fff8ec 0%,#f4a261 45%,#e85d04 100%)'
+                              : 'linear-gradient(135deg,#f7f6f4 0%,#e8e6e2 50%,#111 100%)',
+                      }}
+                    >
+                      <span
+                        className={clsx(
+                          'absolute bottom-2 left-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                          th.id === 'atelier' ? 'bg-white text-[#111]' : 'bg-black/70 text-white',
+                        )}
+                      >
+                        {th.name}
+                      </span>
+                      {selected && (
+                        <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#c2531f] text-white">
+                          <Check size={14} />
+                        </span>
+                      )}
+                    </div>
+                    <div className="space-y-1 p-3">
+                      <p className="text-sm font-bold">{th.name}</p>
+                      <p className="text-[11px] leading-snug text-muted">{th.tagline}</p>
+                      <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#8a7360]">{th.vibe}</p>
+                    </div>
+                  </button>
+                  <a
+                    href={previewUrl(th.id)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5 border-t border-line px-3 py-2.5 text-[12px] font-semibold text-brand"
+                    data-testid={`sf-theme-preview-${th.id}`}
+                  >
+                    <ExternalLink size={13} /> {t('sf.themePreview')}
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         <Button onClick={save} loading={busy} className="w-full" data-testid="sf-save">
           {t('common.save')}

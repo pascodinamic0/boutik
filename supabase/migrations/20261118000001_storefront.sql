@@ -8,7 +8,14 @@ alter table public.shops
   add column if not exists storefront_enabled boolean not null default false,
   add column if not exists storefront_slug text,
   add column if not exists storefront_whatsapp text,
-  add column if not exists storefront_description text;
+  add column if not exists storefront_description text,
+  add column if not exists storefront_theme text not null default 'cinema';
+
+alter table public.shops
+  drop constraint if exists shops_storefront_theme_allow;
+alter table public.shops
+  add constraint shops_storefront_theme_allow
+  check (storefront_theme in ('cinema', 'marche', 'atelier'));
 
 alter table public.shops
   drop constraint if exists shops_storefront_slug_format;
@@ -97,6 +104,10 @@ begin
     'description', v_shop.storefront_description,
     'whatsapp', nullif(trim(coalesce(v_shop.storefront_whatsapp, v_shop.phone, '')), ''),
     'currency', v_shop.currency,
+    'theme', case
+      when v_shop.storefront_theme in ('cinema', 'marche', 'atelier') then v_shop.storefront_theme
+      else 'cinema'
+    end,
     'products', v_products
   );
 end;

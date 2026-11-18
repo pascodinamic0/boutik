@@ -19,6 +19,7 @@ export function ConsentBanner() {
   const accept = () => {
     localStorage.setItem('boutik.consent', new Date().toISOString());
     setShow(false);
+    window.dispatchEvent(new Event('boutik:consent'));
   };
   return (
     <AnimatePresence>

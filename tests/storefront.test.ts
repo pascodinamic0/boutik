@@ -9,6 +9,12 @@ import {
   normalizeStorefrontSlug,
   sanitizePublicStorefront,
 } from '@/lib/storefront';
+import {
+  DEFAULT_STOREFRONT_THEME,
+  isStorefrontThemeId,
+  resolveStorefrontTheme,
+  STOREFRONT_THEME_IDS,
+} from '@/lib/storefront-themes';
 
 describe('storefront slug', () => {
   it('normalizes accents and spaces', () => {
@@ -92,5 +98,43 @@ describe('public payload security', () => {
     expect(msg).toMatch(/Farine|Huile/);
     expect(msg.toLowerCase()).not.toContain('buy');
     expect(msg).not.toMatch(/prix d'achat/i);
+  });
+});
+
+describe('storefront theme', () => {
+  it('allow-lists only cinema | marche | atelier', () => {
+    expect(STOREFRONT_THEME_IDS).toEqual(['cinema', 'marche', 'atelier']);
+    expect(isStorefrontThemeId('cinema')).toBe(true);
+    expect(isStorefrontThemeId('marche')).toBe(true);
+    expect(isStorefrontThemeId('atelier')).toBe(true);
+    expect(isStorefrontThemeId('neon')).toBe(false);
+    expect(isStorefrontThemeId('')).toBe(false);
+    expect(isStorefrontThemeId(null)).toBe(false);
+  });
+
+  it('falls back to cinema for invalid values', () => {
+    expect(resolveStorefrontTheme('bogus')).toBe(DEFAULT_STOREFRONT_THEME);
+    expect(resolveStorefrontTheme(undefined)).toBe('cinema');
+    expect(resolveStorefrontTheme('atelier')).toBe('atelier');
+  });
+
+  it('sanitize persists valid theme and rejects invalid via default', () => {
+    const base = {
+      slug: 'demo-shop',
+      name: 'Test',
+      commune: 'Matete',
+      description: 'ok',
+      whatsapp: '+243812345678',
+      currency: 'CDF',
+      products: [],
+    };
+    expect(sanitizePublicStorefront({ ...base, theme: 'marche' })?.theme).toBe('marche');
+    expect(sanitizePublicStorefront({ ...base, theme: 'atelier' })?.theme).toBe('atelier');
+    expect(sanitizePublicStorefront({ ...base, theme: 'hacker' })?.theme).toBe('cinema');
+    expect(sanitizePublicStorefront({ ...base })?.theme).toBe('cinema');
+  });
+
+  it('demo defaults to cinema theme', () => {
+    expect(DEMO_STOREFRONT.theme).toBe('cinema');
   });
 });

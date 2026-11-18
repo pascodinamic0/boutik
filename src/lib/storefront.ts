@@ -1,5 +1,6 @@
 import { formatMoney } from './money';
 import { waLink } from './phone';
+import { DEFAULT_STOREFRONT_THEME, resolveStorefrontTheme, type StorefrontThemeId } from './storefront-themes';
 import type { Currency } from './types';
 
 export type Availability = 'in' | 'low' | 'out';
@@ -23,6 +24,8 @@ export interface PublicStorefront {
   whatsapp: string | null;
   currency: Currency;
   products: PublicProduct[];
+  /** Theme allow-list id (cinema | marche | atelier). */
+  theme: StorefrontThemeId;
   /** Marqué true pour la boutique de démonstration intégrée. */
   demo?: boolean;
 }
@@ -35,6 +38,7 @@ export const PUBLIC_STOREFRONT_KEYS = [
   'whatsapp',
   'currency',
   'products',
+  'theme',
   'demo',
 ] as const;
 
@@ -127,6 +131,7 @@ export function sanitizePublicStorefront(raw: unknown): PublicStorefront | null 
     whatsapp: o.whatsapp == null || o.whatsapp === '' ? null : String(o.whatsapp),
     currency,
     products,
+    theme: resolveStorefrontTheme(o.theme),
     demo: o.demo === true ? true : undefined,
   };
 }
@@ -182,6 +187,7 @@ export const DEMO_STOREFRONT: PublicStorefront = {
   description: 'Riz, huile, boissons froides et produits du quotidien — livrés ou à récupérer au marché de Matete. Commandez sur WhatsApp.',
   whatsapp: '+243812345678',
   currency: 'CDF',
+  theme: DEFAULT_STOREFRONT_THEME,
   demo: true,
   products: [
     { id: 'demo-riz', name: 'Riz parfumé 25 kg', category: 'Alimentation', sell_price: 85000, photo: '/products/riz.webp', unit: 'sac', availability: 'in' },

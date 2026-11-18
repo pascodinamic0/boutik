@@ -375,6 +375,10 @@ export const fr = {
   'sf.hide': 'Masquer',
   'sf.show': 'Afficher',
   'sf.seeDemo': 'Voir la boutique de démonstration',
+  'sf.theme': 'Thème de la vitrine',
+  'sf.themeHint': 'Chaque thème a sa propre mise en page, typo et motion — pas seulement les couleurs.',
+  'sf.themePreview': 'Prévisualiser',
+  'sf.themeSaved': 'Thème enregistré',
 
   // Réglages
   'set.title': 'Réglages',

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPublicStorefront } from '@/lib/storefront-server';
+import { resolveStorefrontTheme, STOREFRONT_THEMES } from '@/lib/storefront-themes';
 
 export const revalidate = 60;
 
@@ -9,6 +10,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
   const name = shop?.name ?? 'Boutique Boutik';
   const short = name.length > 12 ? `${name.slice(0, 11)}…` : name;
   const start = `/b/${slug}?source=pwa`;
+  const theme = resolveStorefrontTheme(shop?.theme);
+  const colors = STOREFRONT_THEMES[theme];
 
   const manifest = {
     id: `/b/${slug}`,
@@ -22,8 +25,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
     display: 'standalone',
     display_override: ['standalone', 'minimal-ui'],
     orientation: 'any',
-    background_color: '#f6efe6',
-    theme_color: '#c2531f',
+    background_color: colors.backgroundColor,
+    theme_color: colors.themeColor,
     categories: ['shopping', 'business'],
     icons: [
       { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

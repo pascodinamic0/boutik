@@ -40,12 +40,13 @@ begin
 
   insert into public.shops(
     id, name, commune, shop_type, currency, exchange_rate, phone, plan, trial_ends_at, created_by, created_at,
-    storefront_enabled, storefront_slug, storefront_whatsapp, storefront_description
+    storefront_enabled, storefront_slug, storefront_whatsapp, storefront_description, storefront_theme
   )
   values (
     v_shop, 'Alimentation Maman Nzuzi', 'Matete', 'boutique', 'CDF', v_rate, '+243 81 234 5678', 'trial', now() + interval '19 days', v_owner, now() - interval '11 days',
     true, 'maman-nzuzi', '+243812345678',
-    'Alimentation et boissons à Matete. Commandez via WhatsApp — boutique de démonstration Boutik.'
+    'Alimentation et boissons à Matete. Commandez via WhatsApp — boutique de démonstration Boutik.',
+    'cinema'
   );
 
   insert into public.shop_members(shop_id, user_id, role, display_name, email) values

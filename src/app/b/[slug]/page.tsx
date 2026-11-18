@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { StorefrontView } from '@/components/storefront/StorefrontView';
 import { formatMoney } from '@/lib/money';
 import { getPublicStorefront } from '@/lib/storefront-server';
+import { resolveStorefrontTheme, STOREFRONT_THEMES } from '@/lib/storefront-themes';
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -11,12 +12,18 @@ export function generateStaticParams() {
   return [{ slug: 'demo' }];
 }
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ theme?: string }>;
+};
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const sp = await searchParams;
   const shop = await getPublicStorefront(slug);
   if (!shop) return { title: 'Boutique introuvable', robots: { index: false } };
+  const theme = resolveStorefrontTheme(sp.theme ?? shop.theme);
+  const meta = STOREFRONT_THEMES[theme];
   const top = shop.products.slice(0, 6).map((p) => p.name).join(', ');
   const description =
     shop.description?.trim() ||
@@ -58,13 +65,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
     },
     alternates: { canonical: `/b/${shop.slug}` },
+    themeColor: meta.themeColor,
   };
 }
 
-export default async function PublicStorefrontPage({ params }: Props) {
+export default async function PublicStorefrontPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const sp = await searchParams;
   const shop = await getPublicStorefront(slug);
   if (!shop) notFound();
+
+  const theme = resolveStorefrontTheme(sp.theme ?? shop.theme);
+  const meta = STOREFRONT_THEMES[theme];
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -89,9 +101,9 @@ export default async function PublicStorefrontPage({ params }: Props) {
 
   return (
     <>
-      <meta name="theme-color" content="#c2531f" />
+      <meta name="theme-color" content={meta.themeColor} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <StorefrontView shop={shop} />
+      <StorefrontView shop={shop} themeOverride={sp.theme} />
       <noscript>
         <ul>
           {shop.products.map((p) => (

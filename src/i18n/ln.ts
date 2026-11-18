@@ -361,6 +361,10 @@ export const ln: Dict = {
   'sf.hide': 'Kobomba',
   'sf.show': 'Kolakisa',
   'sf.seeDemo': 'Komona butiki ya démonstration',
+  'sf.theme': 'Theme ya vitrine',
+  'sf.themeHint': 'Theme moko moko ezali na layout, typo mpe motion na yango.',
+  'sf.themePreview': 'Kotala liboso',
+  'sf.themeSaved': 'Theme ebatelami',
 
   'set.title': 'Kobongisa',
   'set.shop': 'Butiki na ngai',
