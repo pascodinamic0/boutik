@@ -161,19 +161,27 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
   border-radius: 0;
 }
 
-/* Public storefront color stack: paper base → cocoa structure → terracotta accent */
+/* Public storefront — editorial paper + terracotta accent (portfolio-level contrast) */
 .sf-root {
-  --sf-base: #f6efe6;
-  --sf-paper: #fffaf3;
-  --sf-ink: #1c120c;
+  --sf-base: #faf8f4;
+  --sf-paper: #ffffff;
+  --sf-ink: #0a0a0a;
   --sf-muted: #7a6554;
-  --sf-line: #e5d8c8;
+  --sf-line: rgb(10 10 10 / 0.08);
   --sf-accent: #c2531f;
   background:
-    radial-gradient(ellipse 80% 50% at 10% -10%, rgb(194 83 31 / 0.09), transparent 55%),
-    radial-gradient(ellipse 60% 40% at 100% 0%, rgb(212 160 23 / 0.07), transparent 45%),
+    radial-gradient(ellipse 70% 45% at 85% 8%, rgb(194 83 31 / 0.07), transparent 50%),
+    radial-gradient(ellipse 50% 35% at 0% 100%, rgb(28 18 12 / 0.04), transparent 45%),
     var(--sf-base);
   color: var(--sf-ink);
+}
+
+.sf-cinematic {
+  font-feature-settings: 'ss01' on, 'cv11' on;
+}
+
+.perspective-\[1200px\] {
+  perspective: 1200px;
 }
 
 @media (prefers-reduced-motion: reduce) {

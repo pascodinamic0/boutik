@@ -40,22 +40,21 @@ export function InstallShopPrompt({ shop }: { shop: PublicStorefront }) {
 
   return (
     <>
-      <div className="fixed inset-x-0 top-0 z-50 pt-safe">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 border-b border-[#e5d8c8] bg-[#fffaf3]/px-4 py-2.5 backdrop-blur-md">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-[calc(env(safe-area-inset-top)+4.25rem)]">
+        <div className="pointer-events-auto flex max-w-md items-center gap-2 rounded-full border border-black/10 bg-white/90 py-1.5 pl-3.5 pr-1.5 shadow-[0_12px_40px_rgb(0_0_0/0.12)] backdrop-blur-xl">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-bold text-[#1c120c]">Installer {shop.name}</p>
-            <p className="truncate text-[11px] text-[#7a6554]">Sur l&apos;écran d&apos;accueil · catalogue hors ligne</p>
+            <p className="truncate text-[12.5px] font-bold text-[#0a0a0a]">Installer cette boutique</p>
           </div>
           <button
             type="button"
             onClick={onInstall}
-            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[#c2531f] px-3.5 text-[12.5px] font-bold text-white active:scale-95"
+            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-[#c2531f] px-3 text-[12px] font-bold text-white active:scale-95"
             data-testid="sf-install"
           >
-            <Download size={14} /> Installer
+            <Download size={13} /> Installer
           </button>
-          <button type="button" onClick={dismiss} aria-label="Fermer" className="rounded-full p-1.5 text-[#7a6554] hover:bg-[#f0e6da]">
-            <X size={16} />
+          <button type="button" onClick={dismiss} aria-label="Fermer" className="rounded-full p-1.5 text-[#7a6554] hover:bg-black/5">
+            <X size={15} />
           </button>
         </div>
       </div>
