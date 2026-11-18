@@ -5,7 +5,17 @@ const SHELL = `boutik-shell-${VERSION}`;
 const STATIC = `boutik-static-${VERSION}`; // versioned so stale CSS hashes cannot outlive a deploy
 const RUNTIME = `boutik-runtime-${VERSION}`;
 const STOREFRONT = `boutik-storefront-${VERSION}`; // versioned — never serve HTML that points at deleted CSS
-const PAGES = ['/app', '/', '/connexion', '/confidentialite', '/conditions', '/b/demo'];
+const PAGES = [
+  '/app',
+  '/',
+  '/connexion',
+  '/confidentialite',
+  '/conditions',
+  '/b/demo',
+  '/b/demo?theme=cinema',
+  '/b/demo?theme=marche',
+  '/b/demo?theme=atelier',
+];
 const PRECACHE = __PRECACHE__;
 
 const ASSET_RE = /\/_next\/static\/[^"'\s\\)<>]+/g;
@@ -112,12 +122,11 @@ async function handleNavigation(event, url) {
     }
     return res;
   } catch (e) {
+    // Never fall back across theme query strings (stale /b/demo must not paint over ?theme=).
     const hit =
       (await shell.match(key)) ||
-      (isStorefront ? await shell.match(url.pathname.replace(/\/+$/, '') || '/b') : null) ||
       (key.startsWith('/app') ? await caches.open(SHELL).then((c) => c.match('/app')) : null) ||
-      (isStorefront ? await shell.match('/b/demo') : null) ||
-      (await caches.open(SHELL).then((c) => c.match('/')));
+      (!isStorefront ? await caches.open(SHELL).then((c) => c.match('/')) : null);
     if (hit) return hit;
     return new Response(
       '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boutik</title><body style="font-family:system-ui;background:#faf6f0;color:#24170f;display:grid;place-items:center;min-height:100vh;margin:0;text-align:center"><div><h1>Hors ligne</h1><p>Connectez-vous une première fois à internet pour installer Boutik.</p></div>',
@@ -173,8 +182,8 @@ self.addEventListener('fetch', (event) => {
   // RSC payloads: network only (Next falls back to a full navigation when offline)
   if (req.headers.get('RSC') || url.searchParams.has('_rsc')) return;
 
-  // CSS must never 404 after a deploy — network-first so new hashes win.
-  if (url.pathname.startsWith('/_next/static/') && url.pathname.endsWith('.css')) {
+  // CSS + JS must never paint a previous deploy's UI (e.g. old consent card on /b/demo).
+  if (url.pathname.startsWith('/_next/static/') && (url.pathname.endsWith('.css') || url.pathname.endsWith('.js'))) {
     event.respondWith(networkFirst(req, STATIC));
     return;
   }

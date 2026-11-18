@@ -59,6 +59,10 @@ async function verifyViewport(page, theme, width) {
             })()
           : false;
       const consentAtTop = consent ? consent.getBoundingClientRect().top < 80 : false;
+      const consentBox = consent ? consent.getBoundingClientRect() : null;
+      // Floating bottom-left card regresses to width << viewport; strip is full-bleed
+      const consentIsFloatingCard =
+        !!consentBox && consentBox.width > 0 && consentBox.width < vw * 0.55 && consentBox.left < vw * 0.2;
       const headerShop = document.querySelector('[data-testid="sf-header-shop"]');
       const overlaps = (aEl, bEl) => {
         if (!aEl || !bEl) return false;
@@ -117,6 +121,7 @@ async function verifyViewport(page, theme, width) {
         consentCoversHeader,
         consentCoversHeroPrice,
         consentCoversCategory,
+        consentIsFloatingCard,
         mosaicBalanced,
         firstProductVisible,
         hasName: !!nameEl,
@@ -148,7 +153,8 @@ async function shotTheme(theme, width, height, { keepConsent = false, fullPage =
     } catch {}
   }, keepConsent);
   const page = await context.newPage();
-  const url = theme === 'cinema' ? `${base}/b/demo` : `${base}/b/demo?theme=${theme}`;
+  // Always pass ?theme= so cinema shares the same cache key shape as other themes
+  const url = `${base}/b/demo?theme=${theme}`;
   await page.goto(url, { waitUntil: 'networkidle' });
   await page.getByTestId('storefront-name').waitFor({ timeout: 20000 });
   await page.waitForTimeout(900);
@@ -269,6 +275,7 @@ const failures = results.filter((r) => {
       r.consentCoversHeader ||
       r.consentCoversHeroPrice ||
       r.consentCoversCategory ||
+      r.consentIsFloatingCard ||
       r.defaultFont
     );
   }
